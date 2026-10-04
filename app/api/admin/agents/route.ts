@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const db = supabaseAdmin();
 
   const { data: agents, error } = await db
-    .from("agents")
+    .from("sales_agents")
     .select("*")
     .order("total_earned_sgd", { ascending: false });
 

@@ -25,7 +25,7 @@ export async function GET() {
     db.from("vendors").select("*", { count: "exact", head: true }).eq("status", "active"),
     db.from("marketplace_orders").select("*", { count: "exact", head: true }),
     db.from("bookings").select("*", { count: "exact", head: true }),
-    db.from("agents").select("*", { count: "exact", head: true }).eq("status", "active"),
+    db.from("sales_agents").select("*", { count: "exact", head: true }).eq("status", "active"),
     db.from("sse_members").select("*", { count: "exact", head: true }).eq("active", true),
     db.from("platform_transactions")
       .select("net_amount_sgd, platform_fee_sgd, created_at")
