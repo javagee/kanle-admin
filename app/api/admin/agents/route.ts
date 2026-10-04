@@ -1,12 +1,12 @@
 /**
  * GET /api/admin/agents  — all agents with commission totals
  */
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const db = supabaseAdmin();
 
   const { data: agents, error } = await db
