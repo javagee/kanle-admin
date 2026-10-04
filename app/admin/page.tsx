@@ -137,10 +137,18 @@ export default function AdminDashboard() {
               color: "border-rose-400",
             },
             {
-              title: "⚙️ Platform Settings",
-              desc: "Tenant config, SSE rates, commission percentages",
+              title: "🏢 Tenants",
+              desc: "Onboard new clients, set WABA numbers, configure commission rates per tenant",
               links: [
-                { label: "Tenant settings →",   href: "/admin/settings" },
+                { label: "All tenants →",       href: "/admin/tenants" },
+                { label: "Add new tenant →",    href: "/admin/tenants" },
+              ],
+              color: "border-indigo-400",
+            },
+            {
+              title: "⚙️ Platform Settings",
+              desc: "SSE rates, commission defaults, system config",
+              links: [
                 { label: "Commission rates →",  href: "/admin/settings/commission" },
               ],
               color: "border-gray-400",
