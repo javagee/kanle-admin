@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "functions": {
+    "app/api/**": { "maxDuration": 30 }
+  },
+  "crons": [
+    { "path": "/api/cron/settle-commissions", "schedule": "0 9 * * 1" },
+    { "path": "/api/cron/expire-vouchers",    "schedule": "0 2 * * *" }
+  ]
+}
