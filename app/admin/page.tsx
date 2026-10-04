@@ -16,6 +16,22 @@ interface Stats {
   };
 }
 
+const GLASS_CARD = {
+  background: "rgba(255,255,255,0.07)",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  border: "1px solid rgba(255,255,255,0.15)",
+  boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+} as const;
+
+const GLASS_CARD_LIGHT = {
+  background: "rgba(255,255,255,0.92)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  border: "1px solid rgba(139,47,201,0.12)",
+  boxShadow: "0 2px 16px rgba(74,14,143,0.08)",
+} as const;
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,25 +44,67 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className="min-h-screen"
+      style={{ background: "linear-gradient(160deg, #1a0533 0%, #3d1066 35%, #6B21A8 65%, #9333ea 100%)" }}
+    >
+      {/* Decorative blobs */}
+      <div className="fixed top-[-100px] right-[-80px] w-96 h-96 rounded-full opacity-20 blur-3xl pointer-events-none"
+        style={{ background: "#E53935" }} />
+      <div className="fixed bottom-[-60px] left-[-60px] w-80 h-80 rounded-full opacity-15 blur-3xl pointer-events-none"
+        style={{ background: "#1E88E5" }} />
+      <div className="fixed top-1/2 left-1/4 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none"
+        style={{ background: "#FDD835" }} />
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-500 text-white px-8 py-6">
+      <div
+        className="relative z-10 px-8 py-5"
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(255,255,255,0.12)",
+        }}
+      >
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">康乐·逍遥游 · Admin ERP</h1>
-            <p className="text-emerald-100 text-sm mt-1">HipyHub Tours · Managed by IES Entrepreneurs (S) Pte Ltd</p>
+          <div className="flex items-center gap-3">
+            {/* Mini logo blocks */}
+            <div className="flex gap-0.5">
+              {[
+                { letter: "H", bg: "#E53935" },
+                { letter: "I", bg: "#43A047" },
+                { letter: "P", bg: "#1E88E5" },
+                { letter: "Y", bg: "#FDD835", color: "#333" },
+              ].map(({ letter, bg, color }, i) => (
+                <div key={i} className="w-6 h-6 rounded flex items-center justify-center font-extrabold text-xs"
+                  style={{ background: bg, color: color ?? "#fff" }}>
+                  {letter}
+                </div>
+              ))}
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-white leading-tight">康乐·逍遥游 · Admin ERP</h1>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                HipyHub Tours · Managed by IES Entrepreneurs (S) Pte Ltd
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right text-sm text-emerald-100">
+            <div className="text-right text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
               <div>Commerce-as-a-Service Platform</div>
-              <div className="font-mono text-xs mt-1">v2.0.0</div>
+              <div className="font-mono mt-0.5">v2.0.0</div>
             </div>
             <button
               onClick={async () => {
                 await fetch("/api/auth/logout", { method: "POST" });
                 window.location.href = "/login";
               }}
-              className="text-xs text-emerald-200 hover:text-white border border-emerald-400 px-3 py-1.5 rounded-lg"
+              className="text-xs px-3 py-1.5 rounded-lg transition-all"
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "rgba(255,255,255,0.06)",
+              }}
             >
               Sign out
             </button>
@@ -54,44 +112,55 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-8 py-8">
 
         {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Total Revenue", value: loading ? "—" : `S$${stats?.revenue.total_sgd?.toFixed(2) ?? 0}`, sub: "All transactions", color: "text-emerald-600" },
-            { label: "Platform Fees", value: loading ? "—" : `S$${stats?.revenue.platform_fees_sgd?.toFixed(2) ?? 0}`, sub: "15% commission income", color: "text-blue-600" },
-            { label: "Active Vendors", value: loading ? "—" : `${stats?.vendors.active ?? 0}/${stats?.vendors.total ?? 0}`, sub: "Approved / Total", color: "text-purple-600" },
-            { label: "SSE Members", value: loading ? "—" : `${stats?.sse.members ?? 0}`, sub: "Loyalty programme", color: "text-amber-600" },
-            { label: "Tour Bookings", value: loading ? "—" : `${stats?.bookings.total ?? 0}`, sub: "All time", color: "text-emerald-600" },
-            { label: "Marketplace Orders", value: loading ? "—" : `${stats?.orders.total ?? 0}`, sub: "Vendor orders", color: "text-blue-600" },
-            { label: "Active Agents", value: loading ? "—" : `${stats?.agents.total ?? 0}`, sub: "Sales partners", color: "text-purple-600" },
-            { label: "Pending Payouts", value: loading ? "—" : `S$${stats?.revenue.pending_agent_commission_sgd?.toFixed(2) ?? 0}`, sub: "Agent commissions", color: "text-red-500" },
+            { label: "Total Revenue",       value: loading ? "—" : `S$${stats?.revenue.total_sgd?.toFixed(2) ?? 0}`,                    sub: "All transactions",     color: "#a78bfa" },
+            { label: "Platform Fees",        value: loading ? "—" : `S$${stats?.revenue.platform_fees_sgd?.toFixed(2) ?? 0}`,            sub: "15% commission income", color: "#60a5fa" },
+            { label: "Active Vendors",       value: loading ? "—" : `${stats?.vendors.active ?? 0}/${stats?.vendors.total ?? 0}`,        sub: "Approved / Total",     color: "#34d399" },
+            { label: "SSE Members",          value: loading ? "—" : `${stats?.sse.members ?? 0}`,                                        sub: "Loyalty programme",    color: "#fbbf24" },
+            { label: "Tour Bookings",        value: loading ? "—" : `${stats?.bookings.total ?? 0}`,                                     sub: "All time",             color: "#a78bfa" },
+            { label: "Marketplace Orders",   value: loading ? "—" : `${stats?.orders.total ?? 0}`,                                       sub: "Vendor orders",        color: "#60a5fa" },
+            { label: "Active Agents",        value: loading ? "—" : `${stats?.agents.total ?? 0}`,                                       sub: "Sales partners",       color: "#34d399" },
+            { label: "Pending Payouts",      value: loading ? "—" : `S$${stats?.revenue.pending_agent_commission_sgd?.toFixed(2) ?? 0}`, sub: "Agent commissions",    color: "#f87171" },
           ].map((kpi, i) => (
-            <div key={i} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{kpi.label}</div>
-              <div className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</div>
-              <div className="text-xs text-gray-400 mt-1">{kpi.sub}</div>
+            <div key={i} className="rounded-xl p-5" style={GLASS_CARD}>
+              <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "rgba(255,255,255,0.45)" }}>
+                {kpi.label}
+              </div>
+              <div className="text-2xl font-bold" style={{ color: kpi.color }}>{kpi.value}</div>
+              <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>{kpi.sub}</div>
             </div>
           ))}
         </div>
 
-        {/* Monthly Revenue Chart (simple bar) */}
+        {/* Monthly Revenue Chart */}
         {stats?.revenue.monthly && stats.revenue.monthly.length > 0 && (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
-            <h2 className="text-base font-semibold text-gray-700 mb-4">Monthly Revenue (SGD)</h2>
+          <div className="rounded-xl p-6 mb-8" style={GLASS_CARD}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
+              Monthly Revenue (SGD)
+            </h2>
             <div className="flex items-end gap-3 h-32">
               {stats.revenue.monthly.map(({ month, amount }) => {
                 const max = Math.max(...stats.revenue.monthly.map(m => m.amount));
                 const pct = max > 0 ? (amount / max) * 100 : 0;
                 return (
                   <div key={month} className="flex flex-col items-center flex-1">
-                    <div className="text-xs text-gray-500 mb-1">S${amount.toFixed(0)}</div>
+                    <div className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+                      S${amount.toFixed(0)}
+                    </div>
                     <div
-                      className="w-full bg-emerald-500 rounded-t-md transition-all"
-                      style={{ height: `${Math.max(pct, 4)}%` }}
+                      className="w-full rounded-t-md transition-all"
+                      style={{
+                        height: `${Math.max(pct, 4)}%`,
+                        background: "linear-gradient(180deg, #c084fc, #7c3aed)",
+                      }}
                     />
-                    <div className="text-xs text-gray-400 mt-1">{month.slice(5)}</div>
+                    <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      {month.slice(5)}
+                    </div>
                   </div>
                 );
               })}
@@ -107,70 +176,82 @@ export default function AdminDashboard() {
               desc: "Approve vendors, manage listings, view product catalog",
               links: [
                 { label: "Pending approvals →", href: "/admin/vendors?status=pending" },
-                { label: "All vendors →",       href: "/admin/vendors" },
+                { label: "All vendors →",        href: "/admin/vendors" },
               ],
-              color: "border-emerald-400",
+              accent: "#34d399",
             },
             {
               title: "👥 Sales Agents",
               desc: "Track agent referrals, commissions, and payout batches",
               links: [
-                { label: "Agent dashboard →",   href: "/admin/agents" },
-                { label: "Pending payouts →",   href: "/admin/agents/payouts" },
+                { label: "Agent dashboard →",  href: "/admin/agents" },
+                { label: "Pending payouts →",  href: "/admin/agents/payouts" },
               ],
-              color: "border-blue-400",
+              accent: "#60a5fa",
             },
             {
               title: "💳 SSE Loyalty",
               desc: "Manage SSE members, voucher issuance, tier upgrades",
               links: [
-                { label: "Members list →",      href: "/admin/sse" },
-                { label: "Vouchers →",          href: "/admin/sse/vouchers" },
+                { label: "Members list →", href: "/admin/sse" },
+                { label: "Vouchers →",     href: "/admin/sse/vouchers" },
               ],
-              color: "border-amber-400",
+              accent: "#fbbf24",
             },
             {
               title: "📦 Orders & Bookings",
               desc: "Tour bookings + marketplace orders + payment status",
               links: [
-                { label: "Tour bookings →",     href: "/admin/bookings" },
+                { label: "Tour bookings →",      href: "/admin/bookings" },
                 { label: "Marketplace orders →", href: "/admin/orders" },
               ],
-              color: "border-purple-400",
+              accent: "#a78bfa",
             },
             {
               title: "💬 Conversations",
               desc: "WhatsApp conversations, handoff queue, security log",
               links: [
-                { label: "Active chats →",      href: "/admin/conversations" },
-                { label: "Security log →",      href: "/admin/security" },
+                { label: "Active chats →",  href: "/admin/conversations" },
+                { label: "Security log →",  href: "/admin/security" },
               ],
-              color: "border-rose-400",
+              accent: "#f472b6",
             },
             {
               title: "🏢 Tenants",
               desc: "Onboard new clients, set WABA numbers, configure commission rates per tenant",
               links: [
-                { label: "All tenants →",       href: "/admin/tenants" },
-                { label: "Add new tenant →",    href: "/admin/tenants" },
+                { label: "All tenants →",    href: "/admin/tenants" },
+                { label: "Add new tenant →", href: "/admin/tenants" },
               ],
-              color: "border-indigo-400",
+              accent: "#818cf8",
             },
             {
               title: "⚙️ Platform Settings",
               desc: "SSE rates, commission defaults, system config",
               links: [
-                { label: "Commission rates →",  href: "/admin/settings/commission" },
+                { label: "Commission rates →", href: "/admin/settings/commission" },
               ],
-              color: "border-gray-400",
+              accent: "#94a3b8",
             },
           ].map((card, i) => (
-            <div key={i} className={`bg-white rounded-xl p-5 shadow-sm border-l-4 ${card.color} border border-gray-100`}>
-              <h3 className="font-semibold text-gray-800 mb-1">{card.title}</h3>
-              <p className="text-xs text-gray-500 mb-4">{card.desc}</p>
+            <div
+              key={i}
+              className="rounded-xl p-5 transition-all hover:scale-[1.01]"
+              style={{
+                ...GLASS_CARD,
+                borderLeft: `3px solid ${card.accent}`,
+              }}
+            >
+              <h3 className="font-semibold mb-1 text-white">{card.title}</h3>
+              <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.45)" }}>{card.desc}</p>
               <div className="space-y-1">
                 {card.links.map((l, j) => (
-                  <a key={j} href={l.href} className="block text-sm text-emerald-600 hover:text-emerald-800 font-medium">
+                  <a
+                    key={j}
+                    href={l.href}
+                    className="block text-sm font-medium transition-opacity hover:opacity-80"
+                    style={{ color: card.accent }}
+                  >
                     {l.label}
                   </a>
                 ))}
@@ -179,7 +260,7 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <p className="text-center text-xs text-gray-300 mt-10">
+        <p className="text-center text-xs mt-10" style={{ color: "rgba(255,255,255,0.2)" }}>
           IES Entrepreneurs (S) Pte Ltd · Commerce-as-a-Service Platform · v2.0.0
         </p>
       </div>
