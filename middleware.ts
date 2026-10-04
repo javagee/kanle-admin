@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions, AdminSession } from "@/lib/session";
-import { cookies } from "next/headers";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Allow login page and auth API through
+  // Allow public routes through
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
@@ -17,8 +16,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check session for /admin routes and API routes
-  const session = await getIronSession<AdminSession>(await cookies(), sessionOptions);
+  const res = NextResponse.next();
+  const session = await getIronSession<AdminSession>(req, res, sessionOptions);
 
   if (!session.isAdmin) {
     if (pathname.startsWith("/api/")) {
@@ -27,7 +26,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  return NextResponse.next();
+  return res;
 }
 
 export const config = {
