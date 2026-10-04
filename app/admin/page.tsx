@@ -24,13 +24,6 @@ const GLASS_CARD = {
   boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
 } as const;
 
-const GLASS_CARD_LIGHT = {
-  background: "rgba(255,255,255,0.92)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
-  border: "1px solid rgba(139,47,201,0.12)",
-  boxShadow: "0 2px 16px rgba(74,14,143,0.08)",
-} as const;
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
