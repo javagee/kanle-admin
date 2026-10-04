@@ -36,9 +36,20 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold">康乐·逍遥游 · Admin ERP</h1>
             <p className="text-emerald-100 text-sm mt-1">HipyHub Tours · Managed by IES Entrepreneurs (S) Pte Ltd</p>
           </div>
-          <div className="text-right text-sm text-emerald-100">
-            <div>Commerce-as-a-Service Platform</div>
-            <div className="font-mono text-xs mt-1">v2.0.0</div>
+          <div className="flex items-center gap-4">
+            <div className="text-right text-sm text-emerald-100">
+              <div>Commerce-as-a-Service Platform</div>
+              <div className="font-mono text-xs mt-1">v2.0.0</div>
+            </div>
+            <button
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                window.location.href = "/login";
+              }}
+              className="text-xs text-emerald-200 hover:text-white border border-emerald-400 px-3 py-1.5 rounded-lg"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </div>
