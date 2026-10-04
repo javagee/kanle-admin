@@ -25,6 +25,44 @@ const EMPTY_FORM = {
   agent_fee_pct: "15", primary_color: "#25D366",
 };
 
+const GLASS = {
+  background: "rgba(255,255,255,0.07)",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  border: "1px solid rgba(255,255,255,0.14)",
+  boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+} as const;
+
+const INPUT_STYLE: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.18)",
+  borderRadius: "10px",
+  padding: "8px 12px",
+  fontSize: "13px",
+  color: "#fff",
+  outline: "none",
+};
+
+const LABEL_STYLE: React.CSSProperties = {
+  display: "block",
+  fontSize: "11px",
+  fontWeight: 600,
+  letterSpacing: "0.05em",
+  textTransform: "uppercase",
+  color: "rgba(255,255,255,0.5)",
+  marginBottom: "5px",
+};
+
+const planBadge = (plan: string): React.CSSProperties => {
+  const map: Record<string, React.CSSProperties> = {
+    starter:    { background: "rgba(148,163,184,0.2)", color: "#cbd5e1" },
+    growth:     { background: "rgba(96,165,250,0.2)",  color: "#93c5fd" },
+    enterprise: { background: "rgba(167,139,250,0.2)", color: "#c4b5fd" },
+  };
+  return map[plan] ?? map.starter;
+};
+
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,80 +135,114 @@ export default function TenantsPage() {
     setTimeout(() => setCopied(""), 2000);
   };
 
-  const planBadge = (plan: string) => {
-    const styles: Record<string, string> = {
-      starter: "bg-gray-100 text-gray-600",
-      growth: "bg-blue-100 text-blue-700",
-      enterprise: "bg-purple-100 text-purple-700",
-    };
-    return styles[plan] ?? "bg-gray-100 text-gray-600";
-  };
-
   const f = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className="min-h-screen"
+      style={{ background: "linear-gradient(160deg, #1a0533 0%, #3d1066 35%, #6B21A8 65%, #9333ea 100%)" }}
+    >
+      {/* Blobs */}
+      <div className="fixed top-[-80px] right-[-60px] w-80 h-80 rounded-full opacity-20 blur-3xl pointer-events-none"
+        style={{ background: "#E53935" }} />
+      <div className="fixed bottom-[-60px] left-[-40px] w-72 h-72 rounded-full opacity-15 blur-3xl pointer-events-none"
+        style={{ background: "#1E88E5" }} />
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-500 text-white px-8 py-5">
+      <div
+        className="relative z-10 px-8 py-5"
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(255,255,255,0.12)",
+        }}
+      >
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
-            <a href="/admin" className="text-emerald-200 text-sm hover:text-white">← Dashboard</a>
-            <h1 className="text-xl font-bold mt-1">Tenant Management</h1>
-            <p className="text-emerald-100 text-xs">Each tenant = one WhatsApp Business Account on the platform</p>
+            <a href="/admin" className="text-sm font-medium transition-opacity hover:opacity-80"
+              style={{ color: "rgba(255,255,255,0.5)" }}>
+              ← Dashboard
+            </a>
+            <h1 className="text-xl font-bold text-white mt-1">Tenant Management</h1>
+            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Each tenant = one WhatsApp Business Account on the platform
+            </p>
           </div>
           <button
             onClick={openCreate}
-            className="bg-white text-emerald-700 font-semibold px-5 py-2 rounded-lg text-sm hover:bg-emerald-50"
+            className="font-semibold px-5 py-2 rounded-xl text-sm transition-all"
+            style={{
+              background: "linear-gradient(135deg, #c084fc, #7c3aed)",
+              color: "#fff",
+              boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
+            }}
           >
             + New Tenant
           </button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-8 py-8">
 
-        {/* Tenant cards */}
         {loading ? (
-          <p className="text-gray-400 text-center py-16">Loading…</p>
+          <p className="text-center py-16" style={{ color: "rgba(255,255,255,0.4)" }}>Loading…</p>
         ) : tenants.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-400 text-lg mb-4">No tenants yet</p>
-            <button onClick={openCreate} className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold">
+            <p className="text-lg mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>No tenants yet</p>
+            <button
+              onClick={openCreate}
+              className="px-6 py-2 rounded-xl font-semibold text-white"
+              style={{ background: "linear-gradient(135deg, #c084fc, #7c3aed)" }}
+            >
               Add your first tenant
             </button>
           </div>
         ) : (
           <div className="grid gap-4">
             {tenants.map(t => (
-              <div key={t.id} className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${!t.active ? "opacity-50" : ""}`}>
+              <div
+                key={t.id}
+                className={`rounded-2xl p-6 transition-all ${!t.active ? "opacity-40" : "hover:scale-[1.005]"}`}
+                style={GLASS}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
+                    {/* Avatar */}
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                      style={{ backgroundColor: t.primary_color ?? "#25D366" }}
+                      className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-extrabold text-sm flex-shrink-0 shadow-lg"
+                      style={{ backgroundColor: t.primary_color ?? "#7c3aed" }}
                     >
                       {t.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-800">{t.name}</h3>
-                        {t.name_zh && <span className="text-gray-400 text-sm">{t.name_zh}</span>}
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${planBadge(t.plan)}`}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-white">{t.name}</h3>
+                        {t.name_zh && (
+                          <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>{t.name_zh}</span>
+                        )}
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                          style={planBadge(t.plan)}
+                        >
                           {t.plan}
                         </span>
                         {!t.active && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-medium">inactive</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                            style={{ background: "rgba(239,68,68,0.2)", color: "#fca5a5" }}>
+                            inactive
+                          </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
+                      <div className="flex items-center gap-4 mt-1.5 flex-wrap" style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
                         <span>/{t.slug}</span>
                         <span>AI: {t.ai_persona_name}</span>
-                        <span>Fee: S${t.monthly_fee_sgd}/mo</span>
+                        <span>S${t.monthly_fee_sgd}/mo</span>
                         <span>Platform: {t.platform_fee_pct}%</span>
                         <span>Agent: {t.agent_fee_pct}%</span>
                       </div>
                       {t.whatsapp_number_id && (
-                        <div className="mt-1 text-xs text-gray-400">
+                        <div className="mt-1" style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
                           WABA: <span className="font-mono">{t.whatsapp_number_id}</span>
                         </div>
                       )}
@@ -178,24 +250,38 @@ export default function TenantsPage() {
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Copy UUID */}
                     <button
                       onClick={() => copyId(t.id)}
-                      className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 border border-gray-200 rounded font-mono"
+                      className="text-xs font-mono px-2 py-1 rounded-lg transition-all"
+                      style={{
+                        color: copied === t.id ? "#a78bfa" : "rgba(255,255,255,0.35)",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        background: "rgba(255,255,255,0.05)",
+                      }}
                       title="Copy Tenant ID"
                     >
                       {copied === t.id ? "Copied!" : t.id.slice(0, 8) + "…"}
                     </button>
                     <button
                       onClick={() => openEdit(t)}
-                      className="text-sm text-emerald-600 hover:text-emerald-800 font-medium px-3 py-1 border border-emerald-200 rounded-lg"
+                      className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-all"
+                      style={{
+                        color: "#a78bfa",
+                        border: "1px solid rgba(167,139,250,0.3)",
+                        background: "rgba(167,139,250,0.08)",
+                      }}
                     >
                       Edit
                     </button>
                     {t.active && (
                       <button
                         onClick={() => deactivate(t.id, t.name)}
-                        className="text-sm text-red-500 hover:text-red-700 font-medium px-3 py-1 border border-red-200 rounded-lg"
+                        className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-all"
+                        style={{
+                          color: "#f87171",
+                          border: "1px solid rgba(248,113,113,0.3)",
+                          background: "rgba(248,113,113,0.08)",
+                        }}
                       >
                         Deactivate
                       </button>
@@ -208,113 +294,110 @@ export default function TenantsPage() {
         )}
       </div>
 
-      {/* Create / Edit Modal */}
+      {/* Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="px-8 py-6 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(10,0,30,0.7)", backdropFilter: "blur(8px)" }}>
+          <div
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl"
+            style={{
+              background: "linear-gradient(160deg, #1e0545 0%, #2d0f5e 100%)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+            }}
+          >
+            {/* Modal header */}
+            <div className="px-8 py-6" style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+              <h2 className="text-lg font-bold text-white">
                 {editing ? `Edit — ${editing.name}` : "New Tenant"}
               </h2>
-              <p className="text-sm text-gray-400 mt-0.5">
+              <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Each tenant gets their own isolated data partition and WhatsApp number.
               </p>
             </div>
 
             <div className="px-8 py-6 grid grid-cols-2 gap-4">
-              {/* Business name */}
               <div className="col-span-2 grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Business Name (English) *</label>
+                  <label style={LABEL_STYLE}>Business Name (English) *</label>
                   <input value={form.name} onChange={e => f("name", e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    placeholder="HipyHub Tours" />
+                    style={INPUT_STYLE} placeholder="HipyHub Tours" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Business Name (Chinese)</label>
+                  <label style={LABEL_STYLE}>Business Name (Chinese)</label>
                   <input value={form.name_zh} onChange={e => f("name_zh", e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    placeholder="康乐·逍遥游" />
+                    style={INPUT_STYLE} placeholder="康乐·逍遥游" />
                 </div>
               </div>
 
-              {/* Slug */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Slug * (unique URL key)</label>
+                <label style={LABEL_STYLE}>Slug * (unique URL key)</label>
                 <input value={form.slug} onChange={e => f("slug", e.target.value.toLowerCase().replace(/\s/g, "-"))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono"
-                  placeholder="hipyhub" />
+                  style={{ ...INPUT_STYLE, fontFamily: "monospace" }} placeholder="hipyhub" />
               </div>
 
-              {/* WABA number */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">WhatsApp Phone Number ID</label>
+                <label style={LABEL_STYLE}>WhatsApp Phone Number ID</label>
                 <input value={form.whatsapp_number_id} onChange={e => f("whatsapp_number_id", e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono"
-                  placeholder="1308836422319418" />
-                <p className="text-xs text-gray-400 mt-1">From Meta → WhatsApp → Phone Numbers</p>
+                  style={{ ...INPUT_STYLE, fontFamily: "monospace" }} placeholder="1308836422319418" />
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Meta → WhatsApp → Phone Numbers
+                </p>
               </div>
 
-              {/* AI Persona */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">AI Persona Name (English)</label>
+                <label style={LABEL_STYLE}>AI Persona Name (English)</label>
                 <input value={form.ai_persona_name} onChange={e => f("ai_persona_name", e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  placeholder="Serena" />
+                  style={INPUT_STYLE} placeholder="Serena" />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">AI Persona Name (Chinese)</label>
+                <label style={LABEL_STYLE}>AI Persona Name (Chinese)</label>
                 <input value={form.ai_persona_name_zh} onChange={e => f("ai_persona_name_zh", e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  placeholder="思琳娜" />
+                  style={INPUT_STYLE} placeholder="思琳娜" />
               </div>
 
-              {/* Plan */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Plan</label>
+                <label style={LABEL_STYLE}>Plan</label>
                 <select value={form.plan} onChange={e => f("plan", e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                  <option value="starter">Starter — S$299/mo</option>
-                  <option value="growth">Growth — S$599/mo</option>
-                  <option value="enterprise">Enterprise — custom</option>
+                  style={{ ...INPUT_STYLE, cursor: "pointer" }}>
+                  <option value="starter" style={{ background: "#1e0545" }}>Starter — S$299/mo</option>
+                  <option value="growth"  style={{ background: "#1e0545" }}>Growth — S$599/mo</option>
+                  <option value="enterprise" style={{ background: "#1e0545" }}>Enterprise — custom</option>
                 </select>
               </div>
 
-              {/* Monthly fee */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Fee (SGD)</label>
+                <label style={LABEL_STYLE}>Monthly Fee (SGD)</label>
                 <input value={form.monthly_fee_sgd} onChange={e => f("monthly_fee_sgd", e.target.value)}
-                  type="number" min="0"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                  type="number" min="0" style={INPUT_STYLE} />
               </div>
 
-              {/* Commission rates */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Platform Fee %</label>
+                <label style={LABEL_STYLE}>Platform Fee %</label>
                 <input value={form.platform_fee_pct} onChange={e => f("platform_fee_pct", e.target.value)}
-                  type="number" min="0" max="100"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
-                <p className="text-xs text-gray-400 mt-1">% of each vendor transaction kept by platform</p>
+                  type="number" min="0" max="100" style={INPUT_STYLE} />
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  % of each vendor transaction kept by platform
+                </p>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Agent Commission %</label>
+                <label style={LABEL_STYLE}>Agent Commission %</label>
                 <input value={form.agent_fee_pct} onChange={e => f("agent_fee_pct", e.target.value)}
-                  type="number" min="0" max="100"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
-                <p className="text-xs text-gray-400 mt-1">% paid to referral sales agents</p>
+                  type="number" min="0" max="100" style={INPUT_STYLE} />
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>% paid to referral sales agents</p>
               </div>
 
-              {/* Brand color */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-end gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Brand Color</label>
+                  <label style={LABEL_STYLE}>Brand Color</label>
                   <div className="flex items-center gap-2">
                     <input type="color" value={form.primary_color} onChange={e => f("primary_color", e.target.value)}
-                      className="w-10 h-10 rounded cursor-pointer border border-gray-200" />
+                      className="w-10 h-10 rounded-lg cursor-pointer"
+                      style={{ border: "1px solid rgba(255,255,255,0.2)", background: "transparent" }} />
                     <input value={form.primary_color} onChange={e => f("primary_color", e.target.value)}
-                      className="w-28 border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      style={{ ...INPUT_STYLE, width: "120px", fontFamily: "monospace" }}
                       placeholder="#25D366" />
                   </div>
                 </div>
@@ -322,18 +405,31 @@ export default function TenantsPage() {
             </div>
 
             {error && (
-              <div className="mx-8 mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+              <div className="mx-8 mb-4 px-4 py-3 rounded-xl text-sm"
+                style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5" }}>
                 {error}
               </div>
             )}
 
-            <div className="px-8 py-5 border-t border-gray-100 flex justify-end gap-3">
-              <button onClick={() => setShowForm(false)}
-                className="px-5 py-2 text-sm text-gray-500 hover:text-gray-700 font-medium">
+            <div className="px-8 py-5 flex justify-end gap-3"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+              <button
+                onClick={() => setShowForm(false)}
+                className="px-5 py-2 text-sm font-medium rounded-xl transition-all"
+                style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+              >
                 Cancel
               </button>
-              <button onClick={save} disabled={saving}
-                className="px-6 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50">
+              <button
+                onClick={save}
+                disabled={saving}
+                className="px-6 py-2 text-sm font-bold rounded-xl transition-all disabled:opacity-40"
+                style={{
+                  background: "linear-gradient(135deg, #c084fc, #7c3aed)",
+                  color: "#fff",
+                  boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
+                }}
+              >
                 {saving ? "Saving…" : editing ? "Save Changes" : "Create Tenant"}
               </button>
             </div>
