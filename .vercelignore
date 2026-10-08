@@ -1,0 +1,10 @@
+# Documentation — excluded from Vercel deployments
+README.md
+*.docx
+*.pdf
+*.pptx
+*.xlsx
+
+# Local dev config
+.env*
+!.env.example
