@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
-import { sessionOptions, AdminSession } from "@/lib/session";
+import { sessionOptions, AdminSession, AdminRole } from "@/lib/session";
+
+/** Paths each role can access. super_admin has no restrictions. */
+const ROLE_PATHS: Record<AdminRole, RegExp> = {
+  super_admin:     /.*/,   // all paths
+  tenant_admin:    /^\/admin(\/bookings|\/vendors|\/worksheets|\/agents|\/finance|\/settings|\/crm)?(\/.*)?$|^\/admin$/,
+  school_operator: /^\/admin(\/worksheets|\/courses|\/students|\/settings)?(\/.*)?$|^\/admin$/,
+  vendor_admin:    /^\/admin(\/products|\/orders|\/settings)?(\/.*)?$|^\/admin$/,
+};
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Allow public routes through
+  // Always-public routes
   if (
     pathname.startsWith("/login") ||
-    pathname.startsWith("/agent") ||      // agent dashboard — REF-code auth handled client-side
-    pathname.startsWith("/api/agent") ||  // agent API routes — authenticated by REF code
+    pathname.startsWith("/agent") ||
+    pathname.startsWith("/api/agent") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/cron") ||
     pathname.startsWith("/_next") ||
@@ -21,14 +29,34 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const session = await getIronSession<AdminSession>(req, res, sessionOptions);
 
-  if (!session.isAdmin) {
+  // Not authenticated → redirect to login
+  if (!session.isAuthenticated) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  return res;
+  // Role-based path enforcement (non-super_admin)
+  const role = session.role as AdminRole;
+  if (role && role !== "super_admin") {
+    const allowed = ROLE_PATHS[role];
+    if (allowed && !allowed.test(pathname)) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
+  }
+
+  // Pass tenant context to API routes via header so route handlers can use it
+  const requestHeaders = new Headers(req.headers);
+  if (session.tenantId) requestHeaders.set("x-tenant-id", session.tenantId);
+  if (session.vendorId) requestHeaders.set("x-vendor-id", session.vendorId);
+  requestHeaders.set("x-user-role", role ?? "");
+  requestHeaders.set("x-user-id", session.userId ?? "");
+
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {
