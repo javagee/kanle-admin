@@ -8,6 +8,8 @@ export async function middleware(req: NextRequest) {
   // Allow public routes through
   if (
     pathname.startsWith("/login") ||
+    pathname.startsWith("/agent") ||      // agent dashboard — REF-code auth handled client-side
+    pathname.startsWith("/api/agent") ||  // agent API routes — authenticated by REF code
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/cron") ||
     pathname.startsWith("/_next") ||
