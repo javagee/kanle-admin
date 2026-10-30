@@ -57,7 +57,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-950 text-gray-100">
+    <div className="h-screen flex overflow-hidden bg-gray-950 text-gray-100">
       {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
         <div
@@ -134,7 +134,7 @@ export default function AdminShell({ children }: AdminShellProps) {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
         <header className="sticky top-0 z-10 flex items-center gap-4 px-5 py-3 bg-gray-950 border-b border-gray-800">
           <button
