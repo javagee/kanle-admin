@@ -68,8 +68,8 @@ export default function AdminShell({ children }: AdminShellProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-60 bg-gray-900 border-r border-gray-800 z-30 transform transition-transform duration-200
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:relative lg:translate-x-0 lg:flex lg:flex-col`}
+        className={`fixed top-0 left-0 h-full w-60 bg-gray-900 border-r border-gray-800 z-30 flex flex-col transform transition-transform duration-200
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:relative lg:translate-x-0`}
       >
         {/* Logo */}
         <div className="px-5 py-5 border-b border-gray-800">
