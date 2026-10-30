@@ -24,9 +24,10 @@ export async function requireAdmin(req: NextRequest): Promise<AuthContext | Next
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const tenantId = session.role === "super_admin" ? null : (session.tenantId ?? null);
+  const s = session as unknown as AdminSession;
+  const tenantId = s.role === "super_admin" ? null : (s.tenantId ?? null);
 
-  return { session, tenantId };
+  return { session: s, tenantId };
 }
 
 export function isAuthError(v: AuthContext | NextResponse): v is NextResponse {

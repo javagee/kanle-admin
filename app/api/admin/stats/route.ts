@@ -16,8 +16,8 @@ export async function GET(req: NextRequest) {
   const db = supabaseAdmin();
 
   // Helper: apply tenant filter when present
-  const byTenant = <T>(q: T & { eq: (col: string, val: string) => T }) =>
-    tenantId ? q.eq("tenant_id", tenantId) : q;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const byTenant = (q: any) => tenantId ? q.eq("tenant_id", tenantId) : q;
 
   const [
     { count: totalVendors },
@@ -51,10 +51,14 @@ export async function GET(req: NextRequest) {
       : db.from("agent_commissions").select("commission_sgd, status").limit(500),
   ]);
 
-  const totalRevenue      = revenueRows?.reduce((s, r) => s + (r.net_amount_sgd || 0), 0) ?? 0;
-  const platformFees      = revenueRows?.reduce((s, r) => s + (r.platform_fee_sgd || 0), 0) ?? 0;
-  const pendingCommission = commissionRows?.filter(r => r.status === "pending")
-    .reduce((s, r) => s + (r.commission_sgd || 0), 0) ?? 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const totalRevenue      = (revenueRows as any[])?.reduce((s: number, r: any) => s + (r.net_amount_sgd || 0), 0) ?? 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const platformFees      = (revenueRows as any[])?.reduce((s: number, r: any) => s + (r.platform_fee_sgd || 0), 0) ?? 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pendingCommission = (commissionRows as any[])?.filter((r: any) => r.status === "pending")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .reduce((s: number, r: any) => s + (r.commission_sgd || 0), 0) ?? 0;
 
   // Monthly revenue (last 6 months)
   const monthlyMap: Record<string, number> = {};
