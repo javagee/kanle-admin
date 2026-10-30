@@ -28,6 +28,7 @@ export const ROLE_NAV: Record<AdminRole, { label: string; href: string; icon: st
   super_admin: [
     { label: "Overview",    href: "/admin",              icon: "📊" },
     { label: "Tenants",     href: "/admin/tenants",      icon: "🏢" },
+    { label: "Bookings",    href: "/admin/bookings",     icon: "🗓️" },
     { label: "Vendors",     href: "/admin/vendors",      icon: "🛍️" },
     { label: "Worksheets",  href: "/admin/worksheets",   icon: "📚" },
     { label: "Agents",      href: "/admin/agents",       icon: "🤝" },
