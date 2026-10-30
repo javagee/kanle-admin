@@ -1,18 +1,26 @@
 /**
  * GET /api/admin/agents  — all agents with commission totals
  */
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  const { tenantId } = auth;
+
   const db = supabaseAdmin();
 
-  const { data: agents, error } = await db
+  let agentQuery = db
     .from("sales_agents")
     .select("*")
     .order("total_earned_sgd", { ascending: false });
+  if (tenantId) agentQuery = agentQuery.eq("tenant_id", tenantId);
+
+  const { data: agents, error } = await agentQuery;
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

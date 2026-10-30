@@ -4,10 +4,15 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  const { tenantId } = auth;
+
   const { searchParams } = new URL(req.url);
   const status   = searchParams.get("status");
   const location = searchParams.get("location");
@@ -21,6 +26,7 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
 
+  if (tenantId) query = query.eq("tenant_id", tenantId);
   if (status)   query = query.eq("status", status);
   if (location) query = query.eq("location", location);
 

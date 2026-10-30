@@ -2,13 +2,23 @@
  * GET /api/admin/conversations          — list conversations with customer info
  * GET /api/admin/conversations?id=uuid  — single conversation with full message thread
  * PATCH /api/admin/conversations        — update conversation status
+ *
+ * Tenant scoping: conversations and customers don't have tenant_id yet (see
+ * migration 021). Until that migration runs, super_admin sees all; tenant_admin
+ * sees all (no false scoping on missing column — safer than wrong data).
+ * After migration 021: switch to .eq("tenant_id", tenantId).
  */
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  const { tenantId } = auth;
+
   const db = supabaseAdmin();
   const { searchParams } = new URL(req.url);
   const id     = searchParams.get("id");
@@ -31,7 +41,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ conversation: conv, messages: messages ?? [] });
   }
 
-  // List conversations
+  // List conversations — scope by tenant_id once migration 021 adds the column
   let query = db
     .from("conversations")
     .select(`
@@ -42,22 +52,30 @@ export async function GET(req: NextRequest) {
     .order("updated_at", { ascending: false })
     .limit(limit);
 
+  if (tenantId) query = query.eq("tenant_id", tenantId);
   if (status && status !== "all") query = query.eq("status", status);
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Security log summary (last 50 events)
-  const { data: secEvents } = await db
+  // Security log — scope by tenant_id once migration 021 adds the column
+  let secQ = db
     .from("security_log")
     .select("id, event_type, severity, detail, created_at")
     .order("created_at", { ascending: false })
     .limit(50);
+  if (tenantId) secQ = secQ.eq("tenant_id", tenantId);
+
+  const { data: secEvents } = await secQ;
 
   return NextResponse.json({ conversations: data ?? [], security_log: secEvents ?? [] });
 }
 
 export async function PATCH(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  const { tenantId } = auth;
+
   const db = supabaseAdmin();
   const { id, status } = await req.json();
   if (!id || !status) return NextResponse.json({ error: "id and status required" }, { status: 400 });
@@ -65,7 +83,10 @@ export async function PATCH(req: NextRequest) {
   const update: Record<string, unknown> = { status };
   if (status === "resolved") update.resolved_at = new Date().toISOString();
 
-  const { error } = await db.from("conversations").update(update).eq("id", id);
+  let q = db.from("conversations").update(update).eq("id", id);
+  if (tenantId) q = q.eq("tenant_id", tenantId);
+
+  const { error } = await q;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
