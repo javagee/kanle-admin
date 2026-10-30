@@ -282,7 +282,7 @@ export default function WorksheetsAdminPage() {
         ) : worksheets.length === 0 ? (
           <div style={{ ...GLASS, borderRadius: 16, padding: 48, textAlign: "center" }}>
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 16 }}>No worksheets yet.</p>
-            <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>Click "Upload Worksheet" to add your first Canva export.</p>
+            <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>Click &quot;Upload Worksheet&quot; to add your first Canva export.</p>
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))", gap: 16 }}>
