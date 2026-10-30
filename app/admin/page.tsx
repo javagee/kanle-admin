@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import AdminShell from "@/components/AdminShell";
 
 interface Stats {
   vendors: { total: number; active: number };
@@ -37,75 +38,8 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: "linear-gradient(160deg, #1a0533 0%, #3d1066 35%, #6B21A8 65%, #9333ea 100%)" }}
-    >
-      {/* Decorative blobs */}
-      <div className="fixed top-[-100px] right-[-80px] w-96 h-96 rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: "#E53935" }} />
-      <div className="fixed bottom-[-60px] left-[-60px] w-80 h-80 rounded-full opacity-15 blur-3xl pointer-events-none"
-        style={{ background: "#1E88E5" }} />
-      <div className="fixed top-1/2 left-1/4 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: "#FDD835" }} />
-
-      {/* Header */}
-      <div
-        className="relative z-10 px-8 py-5"
-        style={{
-          background: "rgba(255,255,255,0.06)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255,255,255,0.12)",
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Mini logo blocks */}
-            <div className="flex gap-0.5">
-              {[
-                { letter: "H", bg: "#E53935" },
-                { letter: "I", bg: "#43A047" },
-                { letter: "P", bg: "#1E88E5" },
-                { letter: "Y", bg: "#FDD835", color: "#333" },
-              ].map(({ letter, bg, color }, i) => (
-                <div key={i} className="w-6 h-6 rounded flex items-center justify-center font-extrabold text-xs"
-                  style={{ background: bg, color: color ?? "#fff" }}>
-                  {letter}
-                </div>
-              ))}
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white leading-tight">康乐·逍遥游 · Admin ERP</h1>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>
-                HipyHub Tours · Managed by IES Entrepreneurs (S) Pte Ltd
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-              <div>Commerce-as-a-Service Platform</div>
-              <div className="font-mono mt-0.5">v2.0.0</div>
-            </div>
-            <button
-              onClick={async () => {
-                await fetch("/api/auth/logout", { method: "POST" });
-                window.location.href = "/login";
-              }}
-              className="text-xs px-3 py-1.5 rounded-lg transition-all"
-              style={{
-                color: "rgba(255,255,255,0.7)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                background: "rgba(255,255,255,0.06)",
-              }}
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-8 py-8">
+    <AdminShell>
+      <div className="max-w-6xl mx-auto">
 
         {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -257,6 +191,6 @@ export default function AdminDashboard() {
           IES Entrepreneurs (S) Pte Ltd · Commerce-as-a-Service Platform · v2.0.0
         </p>
       </div>
-    </div>
+    </AdminShell>
   );
 }

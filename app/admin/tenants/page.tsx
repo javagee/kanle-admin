@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import AdminShell from "@/components/AdminShell";
 
 interface Tenant {
   id: string;
@@ -138,27 +139,10 @@ export default function TenantsPage() {
   const f = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: "linear-gradient(160deg, #1a0533 0%, #3d1066 35%, #6B21A8 65%, #9333ea 100%)" }}
-    >
-      {/* Blobs */}
-      <div className="fixed top-[-80px] right-[-60px] w-80 h-80 rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: "#E53935" }} />
-      <div className="fixed bottom-[-60px] left-[-40px] w-72 h-72 rounded-full opacity-15 blur-3xl pointer-events-none"
-        style={{ background: "#1E88E5" }} />
-
-      {/* Header */}
-      <div
-        className="relative z-10 px-8 py-5"
-        style={{
-          background: "rgba(255,255,255,0.06)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255,255,255,0.12)",
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+    <AdminShell>
+      <div className="max-w-6xl mx-auto">
+        {/* Page header */}
+        <div className="flex items-center justify-between mb-8">
           <div>
             <a href="/admin" className="text-sm font-medium transition-opacity hover:opacity-80"
               style={{ color: "rgba(255,255,255,0.5)" }}>
@@ -181,9 +165,6 @@ export default function TenantsPage() {
             + New Tenant
           </button>
         </div>
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-8 py-8">
 
         {loading ? (
           <p className="text-center py-16" style={{ color: "rgba(255,255,255,0.4)" }}>Loading…</p>
@@ -294,7 +275,7 @@ export default function TenantsPage() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal — portal outside max-w container */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(10,0,30,0.7)", backdropFilter: "blur(8px)" }}>
@@ -436,6 +417,6 @@ export default function TenantsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AdminShell>
   );
 }

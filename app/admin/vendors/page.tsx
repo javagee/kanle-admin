@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import AdminShell from "@/components/AdminShell";
 
 interface Vendor {
   id: string;
@@ -80,49 +81,27 @@ export default function VendorsPage() {
   const pendingCount = vendors.filter(v => v.status === "pending").length;
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: "linear-gradient(160deg, #1a0533 0%, #3d1066 35%, #6B21A8 65%, #9333ea 100%)" }}
-    >
-      {/* Blobs */}
-      <div className="fixed top-[-80px] right-[-60px] w-80 h-80 rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: "#43A047" }} />
-      <div className="fixed bottom-[-60px] left-[-40px] w-72 h-72 rounded-full opacity-15 blur-3xl pointer-events-none"
-        style={{ background: "#1E88E5" }} />
-
-      {/* Header */}
-      <div
-        className="relative z-10 px-8 py-5"
-        style={{
-          background: "rgba(255,255,255,0.06)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255,255,255,0.12)",
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <a href="/admin" className="text-sm font-medium transition-opacity hover:opacity-80"
-              style={{ color: "rgba(255,255,255,0.5)" }}>
-              ← Dashboard
-            </a>
-            <div className="flex items-center gap-3 mt-1">
-              <h1 className="text-xl font-bold text-white">Vendor Management</h1>
-              {pendingCount > 0 && (
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(251,191,36,0.25)", color: "#fde68a" }}>
-                  {pendingCount} pending
-                </span>
-              )}
-            </div>
-            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
-              Approve vendors, manage listings and product catalog
-            </p>
+    <AdminShell>
+      <div className="max-w-6xl mx-auto">
+        {/* Page header */}
+        <div className="mb-8">
+          <a href="/admin" className="text-sm font-medium transition-opacity hover:opacity-80"
+            style={{ color: "rgba(255,255,255,0.5)" }}>
+            ← Dashboard
+          </a>
+          <div className="flex items-center gap-3 mt-1">
+            <h1 className="text-xl font-bold text-white">Vendor Management</h1>
+            {pendingCount > 0 && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{ background: "rgba(251,191,36,0.25)", color: "#fde68a" }}>
+                {pendingCount} pending
+              </span>
+            )}
           </div>
+          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+            Approve vendors, manage listings and product catalog
+          </p>
         </div>
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-8 py-8">
 
         {/* Filter + Search bar */}
         <div className="flex items-center gap-3 mb-6 flex-wrap">
@@ -256,6 +235,6 @@ export default function VendorsPage() {
           </div>
         )}
       </div>
-    </div>
+    </AdminShell>
   );
 }

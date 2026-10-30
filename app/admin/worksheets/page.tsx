@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import AdminShell from "@/components/AdminShell";
 
 const API = process.env.NEXT_PUBLIC_API_BASE || "https://hipyhub.vercel.app";
 
@@ -166,10 +167,8 @@ export default function WorksheetsAdminPage() {
   const selectStyle: React.CSSProperties = { ...inputStyle };
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#0a0a1a 0%,#0d1f0d 100%)", padding: "32px 24px", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-
-      {/* Header */}
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+    <AdminShell>
+      <div style={{ maxWidth: 1100, margin: "0 auto", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
           <div>
             <h1 style={{ color: "white", fontSize: 24, fontWeight: 700, margin: 0 }}>📚 Worksheet Catalogue</h1>
@@ -346,6 +345,6 @@ export default function WorksheetsAdminPage() {
           </div>
         )}
       </div>
-    </div>
+    </AdminShell>
   );
 }
