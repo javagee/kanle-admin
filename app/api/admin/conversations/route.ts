@@ -3,10 +3,9 @@
  * GET /api/admin/conversations?id=uuid  — single conversation with full message thread
  * PATCH /api/admin/conversations        — update conversation status
  *
- * Tenant scoping: conversations and customers don't have tenant_id yet (see
- * migration 021). Until that migration runs, super_admin sees all; tenant_admin
- * sees all (no false scoping on missing column — safer than wrong data).
- * After migration 021: switch to .eq("tenant_id", tenantId).
+ * Tenant scoping: tenant_id added to conversations + security_log by migration 021.
+ * New conversations get tenant_id set at creation (core/session/manager.py).
+ * Historical conversations (pre-021) have tenant_id = NULL and are super_admin-only.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
