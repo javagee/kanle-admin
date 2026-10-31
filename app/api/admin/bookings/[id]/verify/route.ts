@@ -51,10 +51,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const ref       = booking.payment_ref ?? bookingId.slice(0, 8).toUpperCase();
   const trackUrl  = `${APP_URL}/booking/${ref}`;
-  const pkgName   = (booking.tour_packages as any)?.name_zh ?? (booking.tour_packages as any)?.name ?? "Tour";
-  const dest      = (booking.tour_packages as any)?.destination ?? "";
-  const custPhone = (booking.customers as any)?.phone_number as string | undefined;
-  const custName  = (booking.customers as any)?.display_name as string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pkg       = booking.tour_packages as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cust      = booking.customers as any;
+  const pkgName   = pkg?.name_zh ?? pkg?.name ?? "Tour";
+  const dest      = pkg?.destination ?? "";
+  const custPhone = cust?.phone_number as string | undefined;
+  const custName  = cust?.display_name as string | undefined;
   const total     = Number(booking.total_sgd ?? 0);
 
   // Generate PDF + upload to Supabase Storage
@@ -233,7 +237,9 @@ async function createTransaction(db: any, booking: any) {
     platform_fee_sgd: platformFeeSgd, agent_fee_sgd: agentFeeSgd, vendor_payout_sgd: vendorPayout,
     agent_id: comm?.agent_id ?? null, payment_status: "paid", payment_ref: booking.payment_ref,
     payment_received_at: new Date().toISOString(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     customer_name: (booking.customers as any)?.display_name ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     customer_phone: (booking.customers as any)?.phone_number ?? null,
   });
   if (comm?.id) {

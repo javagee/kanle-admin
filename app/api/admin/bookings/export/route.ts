@@ -72,7 +72,9 @@ export async function GET(req: NextRequest) {
   const lines: string[] = [row(headers)];
 
   for (const b of bookings) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cust = b.customers as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pkg  = b.tour_packages as any;
     lines.push(row([
       b.payment_ref ?? b.id.slice(0, 8).toUpperCase(),

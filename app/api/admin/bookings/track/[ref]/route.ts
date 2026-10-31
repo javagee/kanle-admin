@@ -39,8 +39,11 @@ export async function GET(_req: NextRequest, { params }: { params: { ref: string
     created_at:            data.created_at,
     payment_submitted_at:  data.payment_submitted_at,
     verified_at:           data.verified_at,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     package_name:          (data.tour_packages as any)?.name_zh ?? (data.tour_packages as any)?.name ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     destination:           (data.tour_packages as any)?.destination ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ticket_url:            (data.context as any)?.ticket_url ?? null,
   });
 }

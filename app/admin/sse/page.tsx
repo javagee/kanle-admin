@@ -111,8 +111,6 @@ export default function SSEPage() {
 
   const f = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  const tierColor = (tier: string) => TIER_STYLES[tier]?.color ?? "white";
-
   return (
     <AdminShell>
       <div style={{ maxWidth: 1100, margin: "0 auto", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
