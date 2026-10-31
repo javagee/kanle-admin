@@ -55,15 +55,19 @@ export default function BookingsPage() {
   const [dateFrom, setDateFrom]         = useState("");
   const [dateTo, setDateTo]             = useState("");
   const [exporting, setExporting]       = useState(false);
+  const [page, setPage]                 = useState(1);
+  const [total, setTotal]               = useState(0);
+  const PAGE_SIZE = 50;
 
-  const load = async (s = statusFilter, p = payFilter) => {
+  const load = async (s = statusFilter, p = payFilter, pg = page) => {
     setLoading(true);
-    const params = new URLSearchParams({ limit: "100" });
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), page: String(pg) });
     if (s !== "all") params.set("status", s);
     if (p !== "all") params.set("payment_status", p);
     const res = await fetch(`/api/admin/bookings?${params}`);
     const data = await res.json();
     setBookings(data.bookings ?? []);
+    setTotal(data.total ?? 0);
     setLoading(false);
   };
 
@@ -135,7 +139,7 @@ export default function BookingsPage() {
               style={{ color: "rgba(255,255,255,0.45)" }}>← Dashboard</a>
             <h1 className="text-xl font-bold text-white mt-1">Tour Bookings</h1>
             <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
-              {bookings.length} total · {counts.pending} pending · {counts.unpaid} unpaid
+              {total} total · {counts.pending} pending · {counts.unpaid} unpaid
               {counts.pendingVerification > 0 && (
                 <span style={{ color: "#93c5fd", fontWeight: 600 }}> · {counts.pendingVerification} awaiting verification</span>
               )}
@@ -165,7 +169,7 @@ export default function BookingsPage() {
           <div className="flex gap-1 rounded-xl p-1" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
             {STATUS_OPTS.map(s => (
               <button key={s}
-                onClick={() => { setStatusFilter(s); load(s, payFilter); }}
+                onClick={() => { setStatusFilter(s); setPage(1); load(s, payFilter, 1); }}
                 className="px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all"
                 style={statusFilter === s
                   ? { background: "linear-gradient(135deg,#c084fc,#7c3aed)", color: "#fff" }
@@ -179,7 +183,7 @@ export default function BookingsPage() {
           <div className="flex gap-1 rounded-xl p-1" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
             {PAYMENT_OPTS.map(p => (
               <button key={p}
-                onClick={() => { setPayFilter(p); load(statusFilter, p); }}
+                onClick={() => { setPayFilter(p); setPage(1); load(statusFilter, p, 1); }}
                 className="px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all"
                 style={payFilter === p
                   ? { background: "rgba(96,165,250,0.3)", color: "#93c5fd" }
@@ -427,6 +431,29 @@ export default function BookingsPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {total > PAGE_SIZE && (
+          <div className="flex items-center justify-between mt-6">
+            <button
+              onClick={() => { const p = page - 1; setPage(p); load(statusFilter, payFilter, p); }}
+              disabled={page === 1 || loading}
+              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-30"
+              style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+              ← Prev
+            </button>
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Page {page} of {Math.ceil(total / PAGE_SIZE)} · {total} bookings
+            </span>
+            <button
+              onClick={() => { const p = page + 1; setPage(p); load(statusFilter, payFilter, p); }}
+              disabled={page >= Math.ceil(total / PAGE_SIZE) || loading}
+              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-30"
+              style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+              Next →
+            </button>
           </div>
         )}
       </div>

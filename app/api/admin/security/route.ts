@@ -10,9 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (isAuthError(auth)) return auth;
-  if (auth.session.role !== "super_admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { tenantId } = auth;
 
   const db = supabaseAdmin();
   const { searchParams } = new URL(req.url);
@@ -26,6 +24,8 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(limit);
 
+  // tenant_admin sees only their tenant's events; super_admin sees all
+  if (tenantId) q = q.eq("tenant_id", tenantId);
   if (severity && severity !== "all") q = q.eq("severity", severity);
   if (event    && event    !== "all") q = q.eq("event_type", event);
 

@@ -47,6 +47,7 @@ export const ROLE_NAV: Record<AdminRole, { label: string; href: string; icon: st
     { label: "Vendors",        href: "/admin/vendors",       icon: "🛍️" },
     { label: "Worksheets",     href: "/admin/worksheets",    icon: "📚" },
     { label: "Conversations",  href: "/admin/conversations", icon: "💬" },
+    { label: "Security",       href: "/admin/security",      icon: "🔐" },
     { label: "Settings",       href: "/admin/settings",      icon: "⚙️" },
   ],
   school_operator: [

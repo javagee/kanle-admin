@@ -20,6 +20,8 @@ export async function GET(req: NextRequest) {
   const status         = searchParams.get("status");
   const payment_status = searchParams.get("payment_status");
   const limit          = Math.min(parseInt(searchParams.get("limit") ?? "50"), 100);
+  const page           = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
+  const offset         = (page - 1) * limit;
 
   let query = db
     .from("bookings")
@@ -29,18 +31,18 @@ export async function GET(req: NextRequest) {
       created_at, updated_at,
       customers ( id, phone_number, display_name ),
       tour_packages ( id, name, destination, price_adult_sgd )
-    `)
+    `, { count: "exact" })
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .range(offset, offset + limit - 1);
 
   if (tenantId)                          query = query.eq("tenant_id", tenantId);
   if (status && status !== "all")        query = query.eq("status", status);
   if (payment_status && payment_status !== "all") query = query.eq("payment_status", payment_status);
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ bookings: data ?? [] });
+  return NextResponse.json({ bookings: data ?? [], total: count ?? 0, page, limit });
 }
 
 export async function PATCH(req: NextRequest) {
