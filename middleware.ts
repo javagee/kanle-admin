@@ -16,6 +16,10 @@ export async function middleware(req: NextRequest) {
   // Always-public routes
   if (
     pathname.startsWith("/login") ||
+    pathname.startsWith("/learn") ||       // student portal — own auth
+    pathname.startsWith("/api/learn") ||   // student API — own auth
+    pathname.startsWith("/booking") ||     // public booking tracker
+    pathname.startsWith("/api/admin/bookings/track") ||
     pathname.startsWith("/agent") ||
     pathname.startsWith("/api/agent") ||
     pathname.startsWith("/api/auth") ||

@@ -41,15 +41,17 @@ export async function POST(req: NextRequest) {
   if (isAuthError(auth)) return auth;
   const { tenantId, session } = auth;
 
-  if (!tenantId) return NextResponse.json({ error: "tenant required" }, { status: 400 });
-
   const db = supabaseAdmin();
   const body = await req.json();
+
+  // super_admin can pass tenant_id in body; tenant_admin uses their own
+  const effectiveTenantId = tenantId ?? body.tenant_id ?? null;
+  if (!effectiveTenantId) return NextResponse.json({ error: "tenant_id required" }, { status: 400 });
 
   const { data, error } = await db
     .from("lms_courses")
     .insert({
-      tenant_id:    tenantId,
+      tenant_id:    effectiveTenantId,
       title:        body.title,
       title_zh:     body.title_zh ?? null,
       description:  body.description ?? null,

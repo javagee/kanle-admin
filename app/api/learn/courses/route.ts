@@ -22,11 +22,11 @@ export async function GET(req: NextRequest) {
     tenantId = t?.id ?? null;
   }
 
+  // Note: chaining two .order() calls breaks filtering in supabase-js v2 — use single order
   let q = db
     .from("lms_courses")
-    .select("id, title, title_zh, description, thumbnail_url, category, level, language, price_sgd, total_lessons, total_duration_min, is_featured")
+    .select("id,title,title_zh,description,thumbnail_url,category,level,language,price_sgd,total_lessons,total_duration_min,is_featured")
     .eq("is_published", true)
-    .order("is_featured", { ascending: false })
     .order("created_at", { ascending: false });
 
   if (tenantId) q = q.eq("tenant_id", tenantId);
