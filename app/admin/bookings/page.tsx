@@ -33,14 +33,15 @@ const STATUS_STYLES: Record<string, React.CSSProperties> = {
 };
 
 const PAYMENT_STYLES: Record<string, React.CSSProperties> = {
-  unpaid:  { background: "rgba(248,113,113,0.15)", color: "#fca5a5" },
-  paid:    { background: "rgba(52,211,153,0.15)",  color: "#6ee7b7" },
-  partial: { background: "rgba(251,191,36,0.15)",  color: "#fde68a" },
-  refunded:{ background: "rgba(148,163,184,0.15)", color: "#cbd5e1" },
+  unpaid:               { background: "rgba(248,113,113,0.15)", color: "#fca5a5" },
+  paid:                 { background: "rgba(52,211,153,0.15)",  color: "#6ee7b7" },
+  partial:              { background: "rgba(251,191,36,0.15)",  color: "#fde68a" },
+  refunded:             { background: "rgba(148,163,184,0.15)", color: "#cbd5e1" },
+  pending_verification: { background: "rgba(96,165,250,0.15)",  color: "#93c5fd" },
 };
 
 const STATUS_OPTS   = ["all", "pending", "confirmed", "completed", "cancelled"] as const;
-const PAYMENT_OPTS  = ["all", "unpaid", "paid", "partial", "refunded"] as const;
+const PAYMENT_OPTS  = ["all", "unpaid", "pending_verification", "paid", "partial", "refunded"] as const;
 
 export default function BookingsPage() {
   const [bookings, setBookings]         = useState<Booking[]>([]);
@@ -49,6 +50,7 @@ export default function BookingsPage() {
   const [payFilter, setPayFilter]       = useState("all");
   const [search, setSearch]             = useState("");
   const [updating, setUpdating]         = useState<string | null>(null);
+  const [verifying, setVerifying]       = useState<string | null>(null);
   const [expanded, setExpanded]         = useState<string | null>(null);
 
   const load = async (s = statusFilter, p = payFilter) => {
@@ -75,6 +77,13 @@ export default function BookingsPage() {
     setUpdating(null);
   };
 
+  const verify = async (id: string) => {
+    setVerifying(id);
+    await fetch(`/api/admin/bookings/${id}/verify`, { method: "POST" });
+    await load(statusFilter, payFilter);
+    setVerifying(null);
+  };
+
   const filtered = bookings.filter(b => {
     if (!search) return true;
     const s = search.toLowerCase();
@@ -88,9 +97,10 @@ export default function BookingsPage() {
   });
 
   const counts = {
-    pending:   bookings.filter(b => b.status === "pending").length,
-    confirmed: bookings.filter(b => b.status === "confirmed").length,
-    unpaid:    bookings.filter(b => b.payment_status === "unpaid" && b.status !== "cancelled").length,
+    pending:              bookings.filter(b => b.status === "pending").length,
+    confirmed:            bookings.filter(b => b.status === "confirmed").length,
+    unpaid:               bookings.filter(b => b.payment_status === "unpaid" && b.status !== "cancelled").length,
+    pendingVerification:  bookings.filter(b => b.payment_status === "pending_verification").length,
   };
 
   return (
@@ -105,6 +115,9 @@ export default function BookingsPage() {
             <h1 className="text-xl font-bold text-white mt-1">Tour Bookings</h1>
             <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
               {bookings.length} total · {counts.pending} pending · {counts.unpaid} unpaid
+              {counts.pendingVerification > 0 && (
+                <span style={{ color: "#93c5fd", fontWeight: 600 }}> · {counts.pendingVerification} awaiting verification</span>
+              )}
             </p>
           </div>
         </div>
@@ -112,9 +125,10 @@ export default function BookingsPage() {
         {/* Summary pills */}
         <div className="flex gap-3 mb-6 flex-wrap">
           {[
-            { label: "Pending review", value: counts.pending, color: "#fde68a", bg: "rgba(251,191,36,0.1)" },
-            { label: "Confirmed",      value: counts.confirmed, color: "#6ee7b7", bg: "rgba(52,211,153,0.1)" },
-            { label: "Awaiting payment", value: counts.unpaid,  color: "#fca5a5", bg: "rgba(248,113,113,0.1)" },
+            { label: "Pending review",    value: counts.pending,             color: "#fde68a", bg: "rgba(251,191,36,0.1)" },
+            { label: "Confirmed",          value: counts.confirmed,           color: "#6ee7b7", bg: "rgba(52,211,153,0.1)" },
+            { label: "Awaiting payment",   value: counts.unpaid,              color: "#fca5a5", bg: "rgba(248,113,113,0.1)" },
+            { label: "Needs verification", value: counts.pendingVerification, color: "#93c5fd", bg: "rgba(96,165,250,0.1)" },
           ].map(pill => (
             <div key={pill.label} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
               style={{ background: pill.bg, border: `1px solid ${pill.color}30` }}>
@@ -320,6 +334,39 @@ export default function BookingsPage() {
                               </button>
                             ))}
                           </div>
+
+                          {/* Verify payment — shown when customer self-reported */}
+                          {b.payment_status === "pending_verification" && (
+                            <div className="pt-1">
+                              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#93c5fd" }}>
+                                ⚠️ Payment pending bank verification
+                              </p>
+                              <button
+                                disabled={verifying === b.id}
+                                onClick={() => verify(b.id)}
+                                className="text-xs px-4 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
+                                style={{ background: "linear-gradient(135deg,#34d399,#059669)", color: "#fff" }}
+                              >
+                                {verifying === b.id ? "Verifying…" : "✅ Verify Payment & Confirm Booking"}
+                              </button>
+                              <p className="text-xs mt-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                                Confirms booking + sends WhatsApp with QR to customer
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Tracking link */}
+                          {b.payment_ref && (
+                            <a
+                              href={`/booking/${b.payment_ref}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg font-semibold transition-all mt-1"
+                              style={{ background: "rgba(167,139,250,0.15)", color: "#c084fc", border: "1px solid rgba(167,139,250,0.3)" }}
+                            >
+                              🔗 Tracking page
+                            </a>
+                          )}
 
                           {b.customers?.phone_number && (
                             <a
