@@ -17,6 +17,7 @@ export async function GET(_req: NextRequest, { params }: { params: { ref: string
     .select(`
       id, status, payment_status, payment_ref, travel_date,
       adults, children, total_sgd, created_at, verified_at, payment_submitted_at,
+      context,
       tour_packages ( name, name_zh, destination )
     `)
     .eq("payment_ref", ref)
@@ -40,5 +41,6 @@ export async function GET(_req: NextRequest, { params }: { params: { ref: string
     verified_at:           data.verified_at,
     package_name:          (data.tour_packages as any)?.name_zh ?? (data.tour_packages as any)?.name ?? null,
     destination:           (data.tour_packages as any)?.destination ?? null,
+    ticket_url:            (data.context as any)?.ticket_url ?? null,
   });
 }

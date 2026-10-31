@@ -1,19 +1,20 @@
 /**
  * POST /api/admin/bookings/[id]/verify
- * Admin verifies bank payment → confirms booking, writes platform_transaction,
- * sends buyer WhatsApp confirmation with QR tracking link + optional email.
+ * Admin verifies bank payment → confirms booking, generates PDF e-ticket,
+ * uploads to Supabase Storage, sends buyer WhatsApp (text + PDF) + email.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
+import { generateTicketPDF } from "@/lib/ticket-pdf";
 
 export const dynamic = "force-dynamic";
 
-const APP_URL         = process.env.APP_URL         ?? "https://hipyhub.com";
-const WA_GRAPH_URL    = "https://graph.facebook.com/v18.0";
-const BREVO_API_KEY   = process.env.BREVO_API_KEY   ?? "";
-const BREVO_FROM      = process.env.BREVO_SENDER_EMAIL ?? "noreply@hipyhub.com";
-const BREVO_NAME      = process.env.BREVO_SENDER_NAME  ?? "HipyHub Tours";
+const APP_URL      = process.env.APP_URL              ?? "https://hipyhub.com";
+const WA_GRAPH_URL = "https://graph.facebook.com/v18.0";
+const BREVO_API_KEY = process.env.BREVO_API_KEY       ?? "";
+const BREVO_FROM   = process.env.BREVO_SENDER_EMAIL   ?? "noreply@hipyhub.com";
+const BREVO_NAME   = process.env.BREVO_SENDER_NAME    ?? "HipyHub Tours";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const auth = await requireAdmin(req);
@@ -45,40 +46,89 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Write platform_transaction (fire-and-forget, non-fatal)
+  // Write platform_transaction (fire-and-forget)
   createTransaction(db, booking).catch(e => console.error("[verify] tx failed:", e));
 
   const ref       = booking.payment_ref ?? bookingId.slice(0, 8).toUpperCase();
   const trackUrl  = `${APP_URL}/booking/${ref}`;
-  const qrUrl     = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(trackUrl)}&size=300x300&margin=10`;
   const pkgName   = (booking.tour_packages as any)?.name_zh ?? (booking.tour_packages as any)?.name ?? "Tour";
+  const dest      = (booking.tour_packages as any)?.destination ?? "";
   const custPhone = (booking.customers as any)?.phone_number as string | undefined;
   const custName  = (booking.customers as any)?.display_name as string | undefined;
-  const total     = Number(booking.total_sgd ?? 0).toFixed(2);
+  const total     = Number(booking.total_sgd ?? 0);
+
+  // Generate PDF + upload to Supabase Storage
+  let ticketUrl: string | undefined;
+  try {
+    const pdfBuf = await generateTicketPDF({
+      ref,
+      packageName: pkgName,
+      destination: dest,
+      travelDate:  booking.travel_date,
+      adults:      booking.adults,
+      children:    booking.children ?? 0,
+      totalSgd:    total,
+      trackUrl,
+      customerName: custName,
+    });
+
+    const storagePath = `${ref}.pdf`;
+    const { error: upErr } = await db.storage
+      .from("booking-tickets")
+      .upload(storagePath, pdfBuf, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+
+    if (!upErr) {
+      const { data: urlData } = db.storage
+        .from("booking-tickets")
+        .getPublicUrl(storagePath);
+      ticketUrl = urlData?.publicUrl;
+
+      // Store ticket URL on booking record
+      await db.from("bookings").update({ context: { ticket_url: ticketUrl } }).eq("id", bookingId);
+    } else {
+      console.error("[verify] storage upload failed:", upErr.message);
+    }
+  } catch (pdfErr) {
+    console.error("[verify] PDF generation failed:", pdfErr);
+  }
+
+  const waConfig = custPhone ? await getWaConfig(db, booking.tenant_id) : null;
 
   const confirmText =
     `✅ *Booking Confirmed — ${ref}*\n\n` +
     `🏷 ${pkgName}\n` +
     `🗓 Travel Date: ${booking.travel_date}\n` +
-    `👥 ${booking.adults} adult${booking.adults !== 1 ? "s" : ""}${booking.children > 0 ? ` + ${booking.children} child${booking.children !== 1 ? "ren" : ""}` : ""}\n` +
-    `💰 Total Paid: S$${total}\n\n` +
-    `Show your booking QR code at the departure point.\n` +
-    `Track: ${trackUrl}`;
+    `👥 ${booking.adults} adult${booking.adults !== 1 ? "s" : ""}${(booking.children ?? 0) > 0 ? ` + ${booking.children} child${booking.children !== 1 ? "ren" : ""}` : ""}\n` +
+    `💰 Total Paid: S$${total.toFixed(2)}\n\n` +
+    (ticketUrl
+      ? `📄 Your e-ticket: ${ticketUrl}\n\n`
+      : "") +
+    `Track your booking: ${trackUrl}`;
 
-  // Send WhatsApp messages (fire-and-forget)
-  if (custPhone) {
-    const waConfig = await getWaConfig(db, booking.tenant_id);
+  if (custPhone && waConfig) {
     sendWhatsAppText(waConfig, custPhone, confirmText).catch(() => {});
-    sendWhatsAppImage(waConfig, custPhone, qrUrl, `Booking QR — ${ref}`).catch(() => {});
+    // Send PDF as document if available, else send QR image
+    if (ticketUrl) {
+      sendWhatsAppDocument(waConfig, custPhone, ticketUrl, `E-Ticket ${ref}.pdf`).catch(() => {});
+    } else {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(trackUrl)}&size=300x300&margin=10`;
+      sendWhatsAppImage(waConfig, custPhone, qrUrl, `Booking QR — ${ref}`).catch(() => {});
+    }
   }
 
-  // Send buyer email if available
   const buyerEmail = booking.customer_email as string | undefined;
   if (buyerEmail) {
-    sendBuyerEmail(buyerEmail, custName ?? "Valued Customer", ref, pkgName, booking.travel_date, total, trackUrl, qrUrl).catch(() => {});
+    sendBuyerEmail({
+      email: buyerEmail, name: custName ?? "Valued Customer",
+      ref, pkgName, travelDate: booking.travel_date,
+      total: total.toFixed(2), trackUrl, ticketUrl,
+    }).catch(() => {});
   }
 
-  return NextResponse.json({ ok: true, tracking_url: trackUrl });
+  return NextResponse.json({ ok: true, tracking_url: trackUrl, ticket_url: ticketUrl ?? null });
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -88,8 +138,8 @@ async function getWaConfig(db: any, bookingTenantId: string | null) {
   if (!bookingTenantId) return { phoneId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? "", token: process.env.WHATSAPP_ACCESS_TOKEN ?? "" };
   const { data } = await db.from("tenants").select("whatsapp_number_id, whatsapp_token").eq("id", bookingTenantId).single();
   return {
-    phoneId: data?.whatsapp_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID ?? "",
-    token:   data?.whatsapp_token     || process.env.WHATSAPP_ACCESS_TOKEN    ?? "",
+    phoneId: (data?.whatsapp_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID) ?? "",
+    token:   (data?.whatsapp_token     || process.env.WHATSAPP_ACCESS_TOKEN)    ?? "",
   };
 }
 
@@ -101,6 +151,14 @@ async function sendWhatsAppText(cfg: { phoneId: string; token: string }, to: str
   });
 }
 
+async function sendWhatsAppDocument(cfg: { phoneId: string; token: string }, to: string, docUrl: string, filename: string) {
+  await fetch(`${WA_GRAPH_URL}/${cfg.phoneId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${cfg.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "document", document: { link: docUrl, filename } }),
+  });
+}
+
 async function sendWhatsAppImage(cfg: { phoneId: string; token: string }, to: string, imageUrl: string, caption: string) {
   await fetch(`${WA_GRAPH_URL}/${cfg.phoneId}/messages`, {
     method: "POST",
@@ -109,20 +167,33 @@ async function sendWhatsAppImage(cfg: { phoneId: string; token: string }, to: st
   });
 }
 
-async function sendBuyerEmail(email: string, name: string, ref: string, pkg: string, travelDate: string, total: string, trackUrl: string, qrUrl: string) {
+async function sendBuyerEmail(opts: {
+  email: string; name: string; ref: string; pkgName: string;
+  travelDate: string; total: string; trackUrl: string; ticketUrl?: string;
+}) {
   if (!BREVO_API_KEY) return;
+  const { email, name, ref, pkgName, travelDate, total, trackUrl, ticketUrl } = opts;
   const html = `
-<div style="font-family:sans-serif;max-width:560px;margin:auto">
-  <h2 style="color:#7c3aed">✅ Booking Confirmed — ${ref}</h2>
-  <table style="border-collapse:collapse;width:100%">
-    <tr><td style="padding:8px 0;color:#555">Package</td><td><b>${pkg}</b></td></tr>
-    <tr><td style="padding:8px 0;color:#555">Travel Date</td><td><b>${travelDate}</b></td></tr>
-    <tr><td style="padding:8px 0;color:#555">Total Paid</td><td><b>S$${total}</b></td></tr>
-    <tr><td style="padding:8px 0;color:#555">Reference</td><td><b>${ref}</b></td></tr>
-  </table>
-  <p>Show the QR code below at the departure point:</p>
-  <img src="${qrUrl}" alt="Booking QR" style="display:block;margin:16px 0" />
-  <p><a href="${trackUrl}">Track your booking online</a></p>
+<div style="font-family:sans-serif;max-width:560px;margin:auto;color:#0f172a">
+  <div style="background:#7c3aed;padding:24px 28px;border-radius:12px 12px 0 0">
+    <h1 style="margin:0;color:#fff;font-size:20px">✅ Booking Confirmed</h1>
+    <p style="margin:6px 0 0;color:#c4b5fd;font-size:13px">Reference: <b>${ref}</b></p>
+  </div>
+  <div style="background:#f8fafc;padding:24px 28px;border-radius:0 0 12px 12px;border:1px solid #e2e8f0;border-top:none">
+    <table style="width:100%;border-collapse:collapse">
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px">Package</td><td style="font-weight:600">${pkgName}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px">Travel Date</td><td style="font-weight:600">${travelDate}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px">Total Paid</td><td style="font-weight:600;color:#059669">S$${total}</td></tr>
+    </table>
+    ${ticketUrl ? `
+    <div style="margin:20px 0;padding:16px;background:#ede9fe;border-radius:8px;text-align:center">
+      <p style="margin:0 0 12px;font-weight:600;color:#7c3aed">📄 Your E-Ticket is ready</p>
+      <a href="${ticketUrl}" style="background:#7c3aed;color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px">Download E-Ticket PDF</a>
+      <p style="margin:10px 0 0;font-size:12px;color:#64748b">Show this at the departure point</p>
+    </div>` : ""}
+    <p style="margin:16px 0 4px;font-size:13px;color:#64748b">Track your booking status:</p>
+    <a href="${trackUrl}" style="color:#7c3aed;font-size:13px">${trackUrl}</a>
+  </div>
 </div>`;
   await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -130,8 +201,9 @@ async function sendBuyerEmail(email: string, name: string, ref: string, pkg: str
     body: JSON.stringify({
       sender: { name: BREVO_NAME, email: BREVO_FROM },
       to: [{ email, name }],
-      subject: `Booking Confirmed — ${ref}`,
+      subject: `Your e-ticket is ready — ${ref}`,
       htmlContent: html,
+      attachment: ticketUrl ? [{ url: ticketUrl, name: `E-Ticket-${ref}.pdf` }] : undefined,
     }),
   });
 }

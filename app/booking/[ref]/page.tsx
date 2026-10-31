@@ -16,6 +16,7 @@ interface BookingStatus {
   verified_at: string | null;
   package_name: string | null;
   destination: string | null;
+  ticket_url: string | null;
 }
 
 type Step = "pending_payment" | "pending_verification" | "confirmed";
@@ -137,6 +138,23 @@ export default function BookingTrackPage() {
             </>
           )}
         </div>
+
+        {/* Download e-ticket — shown once confirmed */}
+        {booking?.ticket_url && booking.status === "confirmed" && (
+          <a
+            href={booking.ticket_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "block", textAlign: "center", marginTop: 16,
+              background: "linear-gradient(135deg,#7c3aed,#6d28d9)",
+              color: "#fff", padding: "14px 24px", borderRadius: 12,
+              fontWeight: 700, fontSize: 15, textDecoration: "none",
+            }}
+          >
+            📄 Download E-Ticket PDF
+          </a>
+        )}
 
         <div style={{ textAlign: "center", marginTop: 20, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
           Questions? Chat with us on WhatsApp
