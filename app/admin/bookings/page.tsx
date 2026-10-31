@@ -52,6 +52,9 @@ export default function BookingsPage() {
   const [updating, setUpdating]         = useState<string | null>(null);
   const [verifying, setVerifying]       = useState<string | null>(null);
   const [expanded, setExpanded]         = useState<string | null>(null);
+  const [dateFrom, setDateFrom]         = useState("");
+  const [dateTo, setDateTo]             = useState("");
+  const [exporting, setExporting]       = useState(false);
 
   const load = async (s = statusFilter, p = payFilter) => {
     setLoading(true);
@@ -75,6 +78,24 @@ export default function BookingsPage() {
     });
     await load(statusFilter, payFilter);
     setUpdating(null);
+  };
+
+  const exportCsv = async () => {
+    setExporting(true);
+    const params = new URLSearchParams();
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (payFilter !== "all")    params.set("payment_status", payFilter);
+    if (dateFrom)               params.set("date_from", dateFrom);
+    if (dateTo)                 params.set("date_to", dateTo);
+    const res = await fetch(`/api/admin/bookings/export?${params}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bookings-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExporting(false);
   };
 
   const verify = async (id: string) => {
@@ -175,6 +196,26 @@ export default function BookingsPage() {
             className="flex-1 min-w-48 rounded-xl px-4 py-2 text-sm text-white"
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", outline: "none" }}
           />
+
+          {/* Travel date range */}
+          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+            title="Travel date from"
+            className="rounded-xl px-3 py-2 text-sm text-white"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", outline: "none", colorScheme: "dark" }} />
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>–</span>
+          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+            title="Travel date to"
+            className="rounded-xl px-3 py-2 text-sm text-white"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", outline: "none", colorScheme: "dark" }} />
+
+          <button
+            onClick={exportCsv}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+            style={{ background: "rgba(52,211,153,0.12)", color: "#6ee7b7", border: "1px solid rgba(52,211,153,0.25)" }}>
+            {exporting ? "…" : "⬇ Export CSV"}
+          </button>
+
           <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
             {filtered.length} booking{filtered.length !== 1 ? "s" : ""}
           </span>
