@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.session.role !== "super_admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const db = supabaseAdmin();
   const body = await req.json();
 
@@ -29,7 +34,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ tenant: data });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.session.role !== "super_admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const db = supabaseAdmin();
   // Soft delete — set active=false rather than destroying data
   const { error } = await db

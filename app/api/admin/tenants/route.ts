@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.session.role !== "super_admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const db = supabaseAdmin();
   const { data, error } = await db
     .from("tenants")
@@ -15,8 +22,18 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.session.role !== "super_admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const db = supabaseAdmin();
   const body = await req.json();
+
+  if (!body.name || !body.slug) {
+    return NextResponse.json({ error: "name and slug are required" }, { status: 400 });
+  }
 
   const { data, error } = await db
     .from("tenants")
