@@ -20,7 +20,7 @@ interface Tenant {
 }
 
 const EMPTY_FORM = {
-  name: "", name_zh: "", slug: "", whatsapp_number_id: "",
+  name: "", name_zh: "", slug: "", whatsapp_number_id: "", whatsapp_token: "",
   ai_persona_name: "Serena", ai_persona_name_zh: "思琳娜",
   plan: "starter", monthly_fee_sgd: "299", platform_fee_pct: "15",
   agent_fee_pct: "15", primary_color: "#25D366",
@@ -96,6 +96,7 @@ export default function TenantsPage() {
     setForm({
       name: t.name, name_zh: t.name_zh ?? "", slug: t.slug,
       whatsapp_number_id: t.whatsapp_number_id ?? "",
+      whatsapp_token: "",  // never pre-fill token for security
       ai_persona_name: t.ai_persona_name ?? "Serena",
       ai_persona_name_zh: "思琳娜",
       plan: t.plan, monthly_fee_sgd: String(t.monthly_fee_sgd),
@@ -323,6 +324,15 @@ export default function TenantsPage() {
                   style={{ ...INPUT_STYLE, fontFamily: "monospace" }} placeholder="1308836422319418" />
                 <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
                   Meta → WhatsApp → Phone Numbers
+                </p>
+              </div>
+
+              <div>
+                <label style={LABEL_STYLE}>WhatsApp API Token</label>
+                <input type="password" value={form.whatsapp_token} onChange={e => f("whatsapp_token", e.target.value)}
+                  style={{ ...INPUT_STYLE, fontFamily: "monospace" }} placeholder={editing ? "Leave blank to keep existing" : "EAAxxxxxxxx…"} />
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Meta → System Users → Generate Token (never pre-filled)
                 </p>
               </div>
 

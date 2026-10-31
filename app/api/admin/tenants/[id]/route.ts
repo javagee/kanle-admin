@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     "primary_color", "logo_url", "active", "plan_expires_at",
   ];
   const patch = Object.fromEntries(
-    Object.entries(body).filter(([k]) => allowed.includes(k))
+    Object.entries(body).filter(([k, v]) => allowed.includes(k) && !(k === "whatsapp_token" && !v))
   );
   patch.updated_at = new Date().toISOString();
 
