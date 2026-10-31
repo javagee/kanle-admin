@@ -32,12 +32,7 @@ export async function GET(req: NextRequest) {
     byTenant(db.from("vendors").select("*", { count: "exact", head: true })),
     byTenant(db.from("vendors").select("*", { count: "exact", head: true }).eq("status", "active")),
     byTenant(db.from("marketplace_orders").select("*", { count: "exact", head: true })),
-    // bookings: scope via tour_packages until migration 021 adds tenant_id directly
-    tenantId
-      ? db.from("bookings")
-          .select("id, tour_packages!inner(tenant_id)", { count: "exact", head: true })
-          .eq("tour_packages.tenant_id", tenantId)
-      : db.from("bookings").select("*", { count: "exact", head: true }),
+    byTenant(db.from("bookings").select("*", { count: "exact", head: true })),
     byTenant(db.from("sales_agents").select("*", { count: "exact", head: true }).eq("status", "active")),
     byTenant(db.from("sse_members").select("*", { count: "exact", head: true }).eq("active", true)),
     byTenant(
