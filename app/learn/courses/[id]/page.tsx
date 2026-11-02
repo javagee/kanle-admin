@@ -173,12 +173,24 @@ export default function CourseDetailPage() {
                       );
                     })}
                     {quizzes.map(q => (
-                      <div key={q.id} className="flex items-center gap-3 px-4 py-2 text-xs"
-                        style={{ color: "rgba(255,255,255,0.4)" }}>
-                        <span className="w-5 text-center">📝</span>
-                        <span className="flex-1">{q.title}</span>
-                        <span style={{ color: "rgba(255,255,255,0.25)" }}>Pass {q.passing_score}%</span>
-                      </div>
+                      enrolled ? (
+                        <a key={q.id} href={`/learn/quiz/${q.id}?course_id=${id}`}
+                          className="flex items-center gap-3 px-4 py-2 text-xs transition-opacity hover:opacity-90"
+                          style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>
+                          <span className="w-5 text-center flex-shrink-0">📝</span>
+                          <span className="flex-1">{q.title}</span>
+                          <span style={{ color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Pass {q.passing_score}%</span>
+                          <span style={{ color: "#a78bfa", flexShrink: 0 }}>→</span>
+                        </a>
+                      ) : (
+                        <div key={q.id} className="flex items-center gap-3 px-4 py-2 text-xs"
+                          style={{ color: "rgba(255,255,255,0.3)" }}>
+                          <span className="w-5 text-center flex-shrink-0">📝</span>
+                          <span className="flex-1">{q.title}</span>
+                          <span style={{ color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>Pass {q.passing_score}%</span>
+                          <span className="flex-shrink-0">🔒</span>
+                        </div>
+                      )
                     ))}
                   </div>
                 )}
