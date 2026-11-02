@@ -345,10 +345,24 @@ export default function CourseEditorPage() {
                               {addingQuiz ? "Adding…" : "+ Add Quiz"}
                             </button>
                           </div>
-                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
-                            Questions can be added after creation via the quiz editor.
-                          </p>
                         </div>
+
+                        {/* Edit questions — link to quiz editor */}
+                        {(mod.lms_quizzes ?? []).length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {[...(mod.lms_quizzes ?? [])].sort((a, b) => a.sort_order - b.sort_order).map(q => (
+                              <div key={q.id} className="flex items-center justify-between px-3 py-2 rounded-lg"
+                                style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.15)" }}>
+                                <span className="text-xs text-white">{q.title}</span>
+                                <a href={`/admin/quizzes/${q.id}`}
+                                  className="text-xs font-semibold px-2 py-1 rounded-lg transition-opacity hover:opacity-80"
+                                  style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}>
+                                  Edit questions ({q.lms_questions?.length ?? 0})
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
