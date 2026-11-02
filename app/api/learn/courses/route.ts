@@ -15,11 +15,13 @@ export async function GET(req: NextRequest) {
   const search     = searchParams.get("search");
   const level      = searchParams.get("level");
 
-  // Resolve tenant slug → id
-  let tenantId: string | null = null;
+  // Resolve tenant slug → id + name
+  let tenantId:   string | null = null;
+  let schoolName: string | null = null;
   if (tenantSlug) {
-    const { data: t } = await db.from("tenants").select("id").eq("slug", tenantSlug).single();
-    tenantId = t?.id ?? null;
+    const { data: t } = await db.from("tenants").select("id,name").eq("slug", tenantSlug).single();
+    tenantId   = t?.id   ?? null;
+    schoolName = t?.name ?? null;
   }
 
   // Note: chaining two .order() calls breaks filtering in supabase-js v2 — use single order
@@ -37,5 +39,5 @@ export async function GET(req: NextRequest) {
   const { data, error } = await q;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ courses: data ?? [] });
+  return NextResponse.json({ courses: data ?? [], ...(schoolName ? { school_name: schoolName } : {}) });
 }

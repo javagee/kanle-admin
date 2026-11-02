@@ -13,10 +13,21 @@ const ROLE_PATHS: Record<AdminRole, RegExp> = {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Inject tenant slug from /learn/[slug]/... paths into downstream API calls
+  if (pathname === "/learn" || pathname.startsWith("/learn/") || pathname.startsWith("/api/learn")) {
+    const slugMatch = pathname.match(/^\/learn\/([^/]+)/);
+    const tenantSlug = slugMatch?.[1];
+    if (tenantSlug && !["login", "register", "dashboard", "courses", "quiz", "certificates"].includes(tenantSlug)) {
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set("x-tenant-slug", tenantSlug);
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+    return NextResponse.next();
+  }
+
   // Always-public routes
   if (
     pathname.startsWith("/login") ||
-    pathname.startsWith("/learn") ||       // student portal — own auth
     pathname.startsWith("/api/learn") ||   // student API — own auth
     pathname.startsWith("/booking") ||     // public booking tracker
     pathname.startsWith("/api/admin/bookings/track") ||
