@@ -21,6 +21,21 @@ interface Course {
   created_at: string;
 }
 
+interface CourseStat {
+  enrollments: number;
+  completions: number;
+  revenue_sgd: number;
+  pending: number;
+}
+
+interface StatsSummary {
+  total_students: number;
+  total_enrollments: number;
+  total_completions: number;
+  total_revenue_sgd: number;
+  pending_payments: number;
+}
+
 const GLASS: React.CSSProperties = {
   background: "rgba(255,255,255,0.05)",
   border: "1px solid rgba(255,255,255,0.1)",
@@ -31,16 +46,27 @@ const LEVEL_COLOR: Record<string, string> = {
 };
 
 export default function CoursesPage() {
-  const [courses, setCourses]   = useState<Course[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [search, setSearch]     = useState("");
-  const [showNew, setShowNew]   = useState(false);
-  const [saving, setSaving]     = useState(false);
-  const [form, setForm]         = useState({
+  const [courses, setCourses]       = useState<Course[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [search, setSearch]         = useState("");
+  const [showNew, setShowNew]       = useState(false);
+  const [saving, setSaving]         = useState(false);
+  const [summary, setSummary]       = useState<StatsSummary | null>(null);
+  const [byCourse, setByCourse]     = useState<Record<string, CourseStat>>({});
+  const [form, setForm] = useState({
     title: "", title_zh: "", description: "", category: "",
     level: "beginner", language: "en", price_sgd: "0",
     thumbnail_url: "", is_published: false,
   });
+
+  const loadStats = async () => {
+    const res = await fetch("/api/admin/lms/stats");
+    if (res.ok) {
+      const d = await res.json();
+      setSummary(d.summary ?? null);
+      setByCourse(d.by_course ?? {});
+    }
+  };
 
   const load = async (q = search) => {
     setLoading(true);
@@ -53,7 +79,7 @@ export default function CoursesPage() {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadStats(); }, []);
 
   const create = async () => {
     if (!form.title) return;
@@ -67,6 +93,7 @@ export default function CoursesPage() {
     setShowNew(false);
     setForm({ title: "", title_zh: "", description: "", category: "", level: "beginner", language: "en", price_sgd: "0", thumbnail_url: "", is_published: false });
     load();
+    loadStats();
   };
 
   const togglePublish = async (c: Course) => {
@@ -77,6 +104,10 @@ export default function CoursesPage() {
     });
     load();
   };
+
+  const completionRate = summary && summary.total_enrollments > 0
+    ? Math.round((summary.total_completions / summary.total_enrollments) * 100)
+    : 0;
 
   return (
     <AdminShell>
@@ -99,6 +130,25 @@ export default function CoursesPage() {
           </button>
         </div>
 
+        {/* Stats bar */}
+        {summary && (
+          <div className="grid grid-cols-5 gap-3 mb-6">
+            {[
+              { label: "Students",    value: summary.total_students,    color: "#a78bfa", warn: false },
+              { label: "Enrolments",  value: summary.total_enrollments, color: "#a78bfa", warn: false },
+              { label: "Completions", value: `${summary.total_completions} (${completionRate}%)`, color: "#6ee7b7", warn: false },
+              { label: "Revenue",     value: `S$${summary.total_revenue_sgd.toFixed(2)}`, color: "#fbbf24", warn: false },
+              { label: "Pending pay", value: summary.pending_payments,  color: "#fb923c", warn: summary.pending_payments > 0 },
+            ].map(s => (
+              <div key={s.label} className="rounded-2xl p-3 text-center"
+                style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${s.warn ? "rgba(251,146,60,0.35)" : "rgba(255,255,255,0.08)"}` }}>
+                <div className="text-lg font-bold leading-tight" style={{ color: s.color }}>{s.value}</div>
+                <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Search */}
         <div className="flex gap-3 mb-5">
           <input value={search} onChange={e => setSearch(e.target.value)}
@@ -120,57 +170,84 @@ export default function CoursesPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {courses.map(c => (
-              <div key={c.id} style={GLASS} className="flex items-center gap-4 p-4">
-                {/* Thumbnail */}
-                <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden"
-                  style={{ background: "rgba(167,139,250,0.15)" }}>
-                  {c.thumbnail_url
-                    ? <img src={c.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-2xl">🎓</div>}
-                </div>
+            {courses.map(c => {
+              const stat = byCourse[c.id];
+              const rate = stat && stat.enrollments > 0
+                ? Math.round((stat.completions / stat.enrollments) * 100)
+                : 0;
+              return (
+                <div key={c.id} style={GLASS} className="p-4">
+                  <div className="flex items-center gap-4">
+                    {/* Thumbnail */}
+                    <div className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden"
+                      style={{ background: "rgba(167,139,250,0.15)" }}>
+                      {c.thumbnail_url
+                        ? <img src={c.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center text-2xl">🎓</div>}
+                    </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-white">{c.title}</span>
-                    {c.title_zh && <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{c.title_zh}</span>}
-                    <span className="text-xs px-1.5 py-0.5 rounded font-semibold capitalize"
-                      style={{ color: LEVEL_COLOR[c.level] ?? "#fff", background: "rgba(255,255,255,0.06)" }}>
-                      {c.level}
-                    </span>
-                    {c.is_featured && (
-                      <span className="text-xs px-1.5 py-0.5 rounded font-semibold"
-                        style={{ color: "#fbbf24", background: "rgba(251,191,36,0.1)" }}>⭐ Featured</span>
-                    )}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-white">{c.title}</span>
+                        {c.title_zh && <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{c.title_zh}</span>}
+                        <span className="text-xs px-1.5 py-0.5 rounded font-semibold capitalize"
+                          style={{ color: LEVEL_COLOR[c.level] ?? "#fff", background: "rgba(255,255,255,0.06)" }}>
+                          {c.level}
+                        </span>
+                        {c.is_featured && (
+                          <span className="text-xs px-1.5 py-0.5 rounded font-semibold"
+                            style={{ color: "#fbbf24", background: "rgba(251,191,36,0.1)" }}>⭐ Featured</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                        <span>{c.total_lessons} lessons</span>
+                        {c.total_duration_min > 0 && <span>{c.total_duration_min} min</span>}
+                        {c.category && <span>{c.category}</span>}
+                        <span className="font-semibold" style={{ color: c.price_sgd > 0 ? "#fbbf24" : "#6ee7b7" }}>
+                          {c.price_sgd > 0 ? `S$${c.price_sgd.toFixed(2)}` : "Free"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Publish toggle */}
+                    <button onClick={() => togglePublish(c)}
+                      className="text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0 transition-all"
+                      style={c.is_published
+                        ? { background: "rgba(52,211,153,0.15)", color: "#6ee7b7", border: "1px solid rgba(52,211,153,0.3)" }
+                        : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                      {c.is_published ? "✓ Published" : "Draft"}
+                    </button>
+
+                    {/* Edit link */}
+                    <Link href={`/admin/courses/${c.id}`}
+                      className="text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0 transition-all"
+                      style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>
+                      Edit →
+                    </Link>
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                    <span>{c.total_lessons} lessons</span>
-                    {c.total_duration_min > 0 && <span>{c.total_duration_min} min</span>}
-                    {c.category && <span>{c.category}</span>}
-                    <span className="font-semibold" style={{ color: c.price_sgd > 0 ? "#fbbf24" : "#6ee7b7" }}>
-                      {c.price_sgd > 0 ? `S$${c.price_sgd.toFixed(2)}` : "Free"}
-                    </span>
-                  </div>
+
+                  {/* Per-course stats strip */}
+                  {stat ? (
+                    <div className="flex items-center gap-3 flex-wrap mt-3 pt-3"
+                      style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      <StatChip label="enrolled" value={stat.enrollments} color="#a78bfa" />
+                      <StatChip label={`completed (${rate}%)`} value={stat.completions} color="#6ee7b7" />
+                      {c.price_sgd > 0 && (
+                        <StatChip label="revenue" value={`S$${stat.revenue_sgd.toFixed(2)}`} color="#fbbf24" />
+                      )}
+                      {stat.pending > 0 && (
+                        <StatChip label="pending payment" value={stat.pending} color="#fb923c" warn />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-3 pt-3 text-xs" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.25)" }}>
+                      No enrolments yet
+                    </div>
+                  )}
                 </div>
-
-                {/* Publish toggle */}
-                <button onClick={() => togglePublish(c)}
-                  className="text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0 transition-all"
-                  style={c.is_published
-                    ? { background: "rgba(52,211,153,0.15)", color: "#6ee7b7", border: "1px solid rgba(52,211,153,0.3)" }
-                    : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  {c.is_published ? "✓ Published" : "Draft"}
-                </button>
-
-                {/* Edit link */}
-                <Link href={`/admin/courses/${c.id}`}
-                  className="text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0 transition-all"
-                  style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>
-                  Edit →
-                </Link>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -264,6 +341,16 @@ export default function CoursesPage() {
         )}
       </div>
     </AdminShell>
+  );
+}
+
+function StatChip({ label, value, color, warn }: { label: string; value: string | number; color: string; warn?: boolean }) {
+  return (
+    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs"
+      style={{ background: warn ? "rgba(251,146,60,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${warn ? "rgba(251,146,60,0.25)" : "rgba(255,255,255,0.08)"}` }}>
+      <span className="font-bold" style={{ color }}>{value}</span>
+      <span style={{ color: "rgba(255,255,255,0.4)" }}>{label}</span>
+    </span>
   );
 }
 
