@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     .select(`
       id, name, email, phone, is_active, created_at,
       lms_enrollments(
-        id, course_id, payment_status, enrolled_at, completed_at,
+        id, course_id, payment_status, payment_proof_url, payment_ref, enrolled_at, completed_at,
         lms_courses(id, title, price_sgd)
       )
     `)

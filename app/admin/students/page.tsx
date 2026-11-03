@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import AdminShell from "@/components/AdminShell";
 
 interface Course      { id: string; title: string; price_sgd: number; total_lessons: number; }
-interface Enrollment  { id: string; course_id: string; payment_status: string; payment_ref: string | null; amount_paid_sgd: number; enrolled_at: string; completed_at: string | null; lms_courses: Course | null; }
+interface Enrollment  { id: string; course_id: string; payment_status: string; payment_ref: string | null; payment_proof_url: string | null; amount_paid_sgd: number; enrolled_at: string; completed_at: string | null; lms_courses: Course | null; }
 interface Student     { id: string; name: string; email: string; phone: string | null; is_active: boolean; created_at: string; lms_enrollments: Enrollment[]; }
 
 const statusBg: Record<string, string> = {
@@ -28,6 +28,7 @@ export default function StudentsPage() {
   const [search,     setSearch]     = useState("");
   const [expanded,   setExpanded]   = useState<string | null>(null);
   const [verifying,  setVerifying]  = useState<string | null>(null);
+  const [paymentRef, setPaymentRef] = useState<Record<string, string>>({});
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const load = useCallback(async (q = "") => {
@@ -47,7 +48,7 @@ export default function StudentsPage() {
     await fetch(`/api/admin/lms/enrollments/${enrollmentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ payment_status: "paid" }),
+      body: JSON.stringify({ payment_status: "paid", payment_ref: paymentRef[enrollmentId] || undefined }),
     });
     const res = await fetch(`/api/admin/lms/students/${studentId}`);
     const d = await res.json();
@@ -205,13 +206,32 @@ export default function StudentsPage() {
                                   {statusLabel[e.payment_status] ?? e.payment_status}
                                 </span>
                                 {e.payment_status === "pending_verification" && (
-                                  <button
-                                    onClick={() => verifyPayment(e.id, s.id)}
-                                    disabled={verifying === e.id}
-                                    className="text-xs px-3 py-1.5 rounded-xl font-bold disabled:opacity-50"
-                                    style={{ background: "linear-gradient(135deg,#34d399,#059669)", color: "#fff" }}>
-                                    {verifying === e.id ? "…" : "Verify payment"}
-                                  </button>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    {e.payment_proof_url && (
+                                      <a href={e.payment_proof_url} target="_blank" rel="noreferrer"
+                                        className="flex-shrink-0 rounded-lg overflow-hidden border"
+                                        style={{ borderColor: "rgba(251,191,36,0.4)" }}
+                                        title="View payment proof">
+                                        <img src={e.payment_proof_url} alt="proof"
+                                          className="w-9 h-9 object-cover"
+                                          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                                      </a>
+                                    )}
+                                    <input
+                                      value={paymentRef[e.id] ?? ""}
+                                      onChange={ev => setPaymentRef(p => ({ ...p, [e.id]: ev.target.value }))}
+                                      placeholder="Ref # (optional)"
+                                      className="text-xs rounded-lg px-2 py-1.5 w-28"
+                                      style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }}
+                                    />
+                                    <button
+                                      onClick={() => verifyPayment(e.id, s.id)}
+                                      disabled={verifying === e.id}
+                                      className="text-xs px-3 py-1.5 rounded-xl font-bold disabled:opacity-50"
+                                      style={{ background: "linear-gradient(135deg,#34d399,#059669)", color: "#fff" }}>
+                                      {verifying === e.id ? "…" : "Verify"}
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             </div>

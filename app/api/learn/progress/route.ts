@@ -56,21 +56,36 @@ export async function POST(req: NextRequest) {
 
   const courseComplete = totalLessons && doneLessons && doneLessons >= totalLessons;
 
+  let certId: string | null = null;
+
   if (courseComplete) {
     // Mark enrollment complete
     await db.from("lms_enrollments")
       .update({ completed_at: new Date().toISOString() })
       .eq("student_id", sess.studentId).eq("course_id", course_id).is("completed_at", null);
-    // Issue certificate if not already issued
-    const { data: existingCert } = await db.from("lms_certificates")
-      .select("id").eq("student_id", sess.studentId).eq("course_id", course_id).single();
-    if (!existingCert) {
-      const { data: course } = await db.from("lms_courses").select("tenant_id").eq("id", course_id).single();
-      await db.from("lms_certificates").insert({
-        student_id: sess.studentId, course_id, tenant_id: course?.tenant_id,
-      });
+
+    // Only issue cert if payment is verified (free or paid — not pending)
+    const { data: enrollment } = await db.from("lms_enrollments")
+      .select("payment_status, tenant_id")
+      .eq("student_id", sess.studentId).eq("course_id", course_id).single();
+
+    const canCert = enrollment?.payment_status === "free" || enrollment?.payment_status === "paid";
+
+    if (canCert) {
+      const { data: existingCert } = await db.from("lms_certificates")
+        .select("id").eq("student_id", sess.studentId).eq("course_id", course_id).single();
+      if (existingCert) {
+        certId = existingCert.id;
+      } else {
+        const tenantId = enrollment?.tenant_id
+          ?? (await db.from("lms_courses").select("tenant_id").eq("id", course_id).single()).data?.tenant_id;
+        const { data: newCert } = await db.from("lms_certificates").insert({
+          student_id: sess.studentId, course_id, tenant_id: tenantId,
+        }).select("id").single();
+        certId = newCert?.id ?? null;
+      }
     }
   }
 
-  return NextResponse.json({ ok: true, course_complete: !!courseComplete });
+  return NextResponse.json({ ok: true, course_complete: !!courseComplete, cert_id: certId });
 }

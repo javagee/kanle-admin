@@ -28,7 +28,7 @@ export async function GET() {
   const db = supabaseAdmin();
   const { data, error } = await db
     .from("lms_enrollments")
-    .select("id, course_id, payment_status, enrolled_at, completed_at, lms_courses(id, title, thumbnail_url, total_lessons)")
+    .select("id, course_id, payment_status, payment_proof_url, enrolled_at, completed_at, lms_courses(id, title, thumbnail_url, total_lessons)")
     .eq("student_id", sess.studentId)
     .order("enrolled_at", { ascending: false });
 
