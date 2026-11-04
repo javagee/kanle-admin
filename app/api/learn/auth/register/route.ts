@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import * as bcrypt from "bcryptjs";
+import { emailWelcomeStudent } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +17,11 @@ export async function POST(req: NextRequest) {
 
   // Resolve tenant
   let tenantId: string | null = null;
+  let tenantName = "";
   if (tenant_slug) {
-    const { data: t } = await db.from("tenants").select("id").eq("slug", tenant_slug).single();
+    const { data: t } = await db.from("tenants").select("id, name").eq("slug", tenant_slug).single();
     tenantId = t?.id ?? null;
+    tenantName = t?.name ?? "";
   }
   if (!tenantId) return NextResponse.json({ error: "Invalid school" }, { status: 400 });
 
@@ -34,6 +37,9 @@ export async function POST(req: NextRequest) {
     if (error.code === "23505") return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Fire-and-forget welcome email
+  emailWelcomeStudent(data.email, data.name, tenantName, tenant_slug).catch(() => {});
 
   return NextResponse.json({ ok: true, student: data }, { status: 201 });
 }

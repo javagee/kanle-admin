@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
+import { emailPaymentProofReceived } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Verify enrollment belongs to this student
   const { data: enrollment } = await db
     .from("lms_enrollments")
-    .select("id, payment_status, student_id")
+    .select("id, payment_status, student_id, tenant_id, lms_courses(id, title), lms_students(name, email)")
     .eq("id", enrollmentId)
     .eq("student_id", session.studentId)
     .single();
@@ -74,5 +75,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .single();
 
   if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+
+  // Alert school operator(s) — fire and forget
+  if (enrollment.tenant_id) {
+    const { data: operators } = await db
+      .from("admin_users")
+      .select("email")
+      .eq("tenant_id", enrollment.tenant_id)
+      .eq("role", "school_operator")
+      .eq("status", "active");
+
+    const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/admin/students`;
+    const student = (Array.isArray(enrollment.lms_students) ? enrollment.lms_students[0] : enrollment.lms_students) as { name: string; email: string } | null;
+    const course  = (Array.isArray(enrollment.lms_courses)  ? enrollment.lms_courses[0]  : enrollment.lms_courses)  as { id: string; title: string } | null;
+
+    for (const op of operators ?? []) {
+      emailPaymentProofReceived(
+        op.email,
+        student?.name ?? "A student",
+        course?.title ?? "a course",
+        publicUrl,
+        adminUrl,
+      ).catch(() => {});
+    }
+  }
+
   return NextResponse.json({ enrollment: updated, proof_url: publicUrl });
 }
