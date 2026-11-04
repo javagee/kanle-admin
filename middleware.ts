@@ -51,7 +51,7 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/learn" || pathname.startsWith("/learn/") || pathname.startsWith("/api/learn")) {
     const slugMatch = pathname.match(/^\/learn\/([^/]+)/);
     const tenantSlug = slugMatch?.[1];
-    if (tenantSlug && !["login", "register", "dashboard", "courses", "quiz", "certificates"].includes(tenantSlug)) {
+    if (tenantSlug && !["login", "register", "dashboard", "courses", "quiz", "certificates", "forgot-password", "reset-password"].includes(tenantSlug)) {
       const requestHeaders = new Headers(req.headers);
       requestHeaders.set("x-tenant-slug", tenantSlug);
       return NextResponse.next({ request: { headers: requestHeaders } });

@@ -124,6 +124,21 @@ export async function emailPaymentProofReceived(
   });
 }
 
+export async function emailPasswordReset(
+  to: string, name: string, resetUrl: string
+): Promise<void> {
+  await sendEmail({
+    to,
+    subject: "Reset your password",
+    htmlContent: wrap(`
+      ${h1("Password Reset")}
+      ${p(`Hi <strong style="color:#a78bfa;">${name}</strong>, we received a request to reset your password. Click the button below — this link expires in <strong style="color:#fff;">1 hour</strong>.`)}
+      ${btn("Reset My Password →", resetUrl)}
+      ${p(`If you didn't request this, you can safely ignore this email. Your password will not change.`)}
+    `),
+  });
+}
+
 export async function emailPaymentVerified(
   to: string,
   name: string,

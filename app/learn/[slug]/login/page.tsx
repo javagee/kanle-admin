@@ -44,6 +44,11 @@ export default function SchoolLoginPage() {
               className="w-full px-4 py-2.5 rounded-xl text-sm text-white"
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }} />
           </div>
+          <div className="flex justify-end -mt-1">
+            <Link href={`/learn/${slug}/forgot-password`} className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Forgot password?
+            </Link>
+          </div>
           {error && <p className="text-sm" style={{ color: "#fca5a5" }}>{error}</p>}
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl text-sm font-bold disabled:opacity-50"
