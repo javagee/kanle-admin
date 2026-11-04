@@ -13,7 +13,41 @@ const ROLE_PATHS: Record<AdminRole, RegExp> = {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Inject tenant slug from /learn/[slug]/... paths into downstream API calls
+  // ── Subdomain-based school routing ───────────────────────────────────────
+  // When NEXT_PUBLIC_ROOT_DOMAIN is set (e.g. "kanle.app"), requests to
+  // school.kanle.app/* are rewritten to /learn/school/* internally so all
+  // existing slug-based pages and APIs work without modification.
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "";
+  const host = req.headers.get("host") ?? "";
+  const isSchoolSubdomain =
+    rootDomain !== "" &&
+    host !== rootDomain &&
+    host !== `www.${rootDomain}` &&
+    host.endsWith(`.${rootDomain}`);
+
+  if (isSchoolSubdomain) {
+    const slug = host.slice(0, host.length - rootDomain.length - 1);
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-tenant-slug", slug);
+
+    // API routes just need the header — no path rewrite
+    if (pathname.startsWith("/api/learn")) {
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+
+    // Page/asset requests: rewrite /foo → /learn/[slug]/foo unless already scoped
+    const alreadyScoped = pathname.startsWith(`/learn/${slug}`);
+    if (!alreadyScoped) {
+      const rewritePath = `/learn/${slug}${pathname === "/" ? "" : pathname}`;
+      return NextResponse.rewrite(new URL(rewritePath, req.url), {
+        request: { headers: requestHeaders },
+      });
+    }
+
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  // ── Path-based school routing (/learn/[slug]/*) ──────────────────────────
   if (pathname === "/learn" || pathname.startsWith("/learn/") || pathname.startsWith("/api/learn")) {
     const slugMatch = pathname.match(/^\/learn\/([^/]+)/);
     const tenantSlug = slugMatch?.[1];
