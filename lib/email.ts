@@ -1,39 +1,50 @@
 /**
- * Email via Resend REST API (no package — plain fetch).
- * Set RESEND_API_KEY and EMAIL_FROM in environment to enable.
- * If RESEND_API_KEY is absent, all sends are silently skipped.
+ * Email via Brevo (api.brevo.com/v3/smtp/email).
+ * Requires BREVO_API_KEY and BREVO_FROM_EMAIL in environment.
+ * Silently skips if key is absent or placeholder.
  */
 
-const RESEND_API = "https://api.resend.com/emails";
+const BREVO_API = "https://api.brevo.com/v3/smtp/email";
+
+function isKeyValid(k: string | undefined): k is string {
+  return !!k && !k.includes("REPLACE_ME") && k.length > 10;
+}
 
 interface SendArgs {
   to: string;
   subject: string;
-  html: string;
+  htmlContent: string;
 }
 
-async function sendEmail({ to, subject, html }: SendArgs): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return;
+async function sendEmail({ to, subject, htmlContent }: SendArgs): Promise<void> {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!isKeyValid(apiKey)) return;
 
-  const from = process.env.EMAIL_FROM ?? "LMS <onboarding@resend.dev>";
+  const fromEmail = process.env.BREVO_FROM_EMAIL ?? "gerardespinas@gmail.com";
+  const fromName  = process.env.BREVO_FROM_NAME  ?? "LMS";
 
-  await fetch(RESEND_API, {
+  await fetch(BREVO_API, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to, subject, html }),
+    headers: { "api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender: { name: fromName, email: fromEmail },
+      to:     [{ email: to }],
+      subject,
+      htmlContent,
+    }),
   }).catch(() => {});
 }
 
 // ─── Shared layout ────────────────────────────────────────────────────────────
 
 function wrap(body: string): string {
+  const name = process.env.BREVO_FROM_NAME ?? "LMS";
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#0f0a1e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px;">
 <table width="100%" style="max-width:520px;background:#1a1035;border-radius:16px;border:1px solid rgba(255,255,255,0.1);overflow:hidden;">
 <tr><td style="background:linear-gradient(135deg,#c084fc,#7c3aed);padding:28px 32px;">
-  <p style="margin:0;font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.3px;">🎓 LMS</p>
+  <p style="margin:0;font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.3px;">🎓 ${name}</p>
 </td></tr>
 <tr><td style="padding:32px;">
   ${body}
@@ -81,7 +92,7 @@ export async function emailWelcomeStudent(
   await sendEmail({
     to,
     subject: `Welcome to ${schoolName}!`,
-    html: wrap(`
+    htmlContent: wrap(`
       ${h1(`Welcome, ${name}!`)}
       ${p(`You've successfully registered at <strong style="color:#a78bfa;">${schoolName}</strong>. You can now browse and enrol in courses.`)}
       ${infoTable(infoRow("School", schoolName), infoRow("Email", to))}
@@ -100,7 +111,7 @@ export async function emailPaymentProofReceived(
   await sendEmail({
     to: operatorEmail,
     subject: `Payment proof received — ${studentName}`,
-    html: wrap(`
+    htmlContent: wrap(`
       ${h1("Payment Proof Received")}
       ${p(`A student has uploaded payment proof for a course. Please review and verify.`)}
       ${infoTable(
@@ -124,12 +135,12 @@ export async function emailPaymentVerified(
   await sendEmail({
     to,
     subject: `Payment verified — ${courseName}`,
-    html: wrap(`
+    htmlContent: wrap(`
       ${h1("Payment Verified! ✓")}
       ${p(`Great news, <strong style="color:#a78bfa;">${name}</strong>! Your payment for the following course has been verified. You now have full access.`)}
       ${infoTable(
         infoRow("Course", courseName),
-        infoRow("Status", "Paid & Unlocked"),
+        infoRow("Status", "Paid &amp; Unlocked"),
       )}
       ${pill("Paid", "#6ee7b7")}
       <br><br>
