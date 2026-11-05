@@ -23,8 +23,8 @@
   /* Borders & surfaces */
   --qs-border:    rgba(0,229,255,0.15);
   --qs-border2:   rgba(167,139,250,0.2);
-  --qs-card:      rgba(15,20,66,0.8);
-  --qs-card-hover:rgba(22,27,82,0.9);
+  --qs-card:      rgba(22,27,82,0.75);
+  --qs-card-hover:rgba(28,35,96,0.9);
   --qs-glow-cyan: 0 0 20px rgba(0,229,255,0.12);
   --qs-glow-vio:  0 0 20px rgba(167,139,250,0.15);
   /* Background gradient */
