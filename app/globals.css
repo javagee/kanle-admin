@@ -2,26 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── QuantumSHIELD × HipyHub Brand Tokens ─────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Navy base (QuantumSHIELD dark) */
+  --qs-navy:   #0A0E2E;
+  --qs-navy2:  #0F1442;
+  --qs-navy3:  #161B52;
+  /* Cyan accent (QuantumSHIELD cyber) */
+  --qs-cyan:   #00E5FF;
+  --qs-cyan2:  #00B8CC;
+  /* Violet swatches (HipyHub brand — keep these) */
+  --qs-violet: #a78bfa;
+  --qs-purple: #7c3aed;
+  --qs-purple2:#c084fc;
+  /* Semantic */
+  --qs-green:  #34d399;
+  --qs-yellow: #fbbf24;
+  --qs-red:    #f87171;
+  --qs-blue:   #60a5fa;
+  /* Borders & surfaces */
+  --qs-border:    rgba(0,229,255,0.15);
+  --qs-border2:   rgba(167,139,250,0.2);
+  --qs-card:      rgba(15,20,66,0.8);
+  --qs-card-hover:rgba(22,27,82,0.9);
+  --qs-glow-cyan: 0 0 20px rgba(0,229,255,0.12);
+  --qs-glow-vio:  0 0 20px rgba(167,139,250,0.15);
+  /* Background gradient */
+  --background: var(--qs-navy);
+  --foreground: #e2e8f0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--qs-navy);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  overflow-x: hidden;
+}
+
+/* ── Custom scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--qs-navy2); }
+::-webkit-scrollbar-thumb { background: var(--qs-purple); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--qs-violet); }
+
+/* ── Utility: glass card ───────────────────────────────────────────────────── */
+.qs-card {
+  background: var(--qs-card);
+  border: 1px solid var(--qs-border);
+  border-radius: 10px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.qs-card-violet {
+  background: var(--qs-card);
+  border: 1px solid var(--qs-border2);
+  border-radius: 10px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Cyan glow on focus ────────────────────────────────────────────────────── */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--qs-cyan) !important;
+  box-shadow: 0 0 0 2px rgba(0,229,255,0.12);
+}
+
+/* ── Utility: cyber badge ──────────────────────────────────────────────────── */
+.qs-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
 }

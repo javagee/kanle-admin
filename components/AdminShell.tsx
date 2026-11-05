@@ -18,6 +18,25 @@ interface AdminShellProps {
   children: ReactNode;
 }
 
+// QuantumSHIELD × HipyHub brand tokens
+const NAVY   = "#0A0E2E";
+const NAVY2  = "#0F1442";
+const NAVY3  = "#161B52";
+const CYAN   = "#00E5FF";
+const BORDER = "rgba(0,229,255,0.15)";
+const BORDER_VIOLET = "rgba(167,139,250,0.22)";
+const VIOLET = "#a78bfa";
+const PURPLE = "#7c3aed";
+const TEXT   = "#e2e8f0";
+const MUTED  = "rgba(226,232,240,0.45)";
+const ACTIVE_BG = "rgba(124,58,237,0.25)";
+
+const GLASS = {
+  background: NAVY2,
+  border: `1px solid ${BORDER}`,
+  boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+};
+
 export default function AdminShell({ children }: AdminShellProps) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,8 +60,15 @@ export default function AdminShell({ children }: AdminShellProps) {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: NAVY }}>
+        {/* Cyber radial glow */}
+        <div style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          background: `radial-gradient(ellipse at 30% 30%, rgba(124,58,237,0.18) 0%, transparent 60%),
+                       radial-gradient(ellipse at 70% 80%, rgba(0,229,255,0.07) 0%, transparent 50%)`,
+        }} />
+        <div style={{ width: 36, height: 36, border: `3px solid ${VIOLET}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -57,51 +83,80 @@ export default function AdminShell({ children }: AdminShellProps) {
   };
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-950 text-gray-100">
+    <div style={{ height: "100vh", display: "flex", overflow: "hidden", background: NAVY, color: TEXT, fontFamily: "'Segoe UI', system-ui, sans-serif", fontSize: 14, position: "relative" }}>
+
+      {/* Background cyber glow */}
+      <div style={{
+        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
+        background: `radial-gradient(ellipse at 15% 20%, rgba(124,58,237,0.12) 0%, transparent 50%),
+                     radial-gradient(ellipse at 85% 80%, rgba(0,229,255,0.06) 0%, transparent 45%)`,
+      }} />
+
       {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 20 }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 h-full w-60 bg-gray-900 border-r border-gray-800 z-30 flex flex-col transform transition-transform duration-200
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:relative lg:translate-x-0`}
+      <aside style={{
+        ...GLASS,
+        position: "fixed", top: 0, left: 0, height: "100%", width: 232, zIndex: 30,
+        display: "flex", flexDirection: "column",
+        borderRight: `1px solid ${BORDER}`,
+        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.2s ease",
+        background: `linear-gradient(180deg, ${NAVY2} 0%, #0D1138 100%)`,
+      }}
+        className="lg:translate-x-0 lg:relative lg:transform-none"
       >
         {/* Logo */}
-        <div className="px-5 py-5 border-b border-gray-800">
-          <div className="flex gap-1 mb-3">
+        <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${BORDER}` }}>
+          {/* Cyan scan line accent */}
+          <div style={{ height: 2, background: `linear-gradient(90deg, ${CYAN}, transparent)`, marginBottom: 16, borderRadius: 1 }} />
+          <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
             {[
               { l: "H", bg: "#E53935" }, { l: "I", bg: "#43A047" }, { l: "P", bg: "#1E88E5" },
-              { l: "Y", bg: "#FDD835", c: "#333" }, { l: "H", bg: "#6A1B9A" }, { l: "U", bg: "#6A1B9A" }, { l: "B", bg: "#6A1B9A" },
+              { l: "Y", bg: "#FDD835", c: "#333" }, { l: "H", bg: PURPLE }, { l: "U", bg: PURPLE }, { l: "B", bg: PURPLE },
             ].map(({ l, bg, c }, i) => (
-              <div key={i} className="w-7 h-7 rounded-md flex items-center justify-center font-extrabold text-xs shadow"
-                style={{ background: bg, color: c ?? "#fff" }}>
+              <div key={i} style={{
+                width: 26, height: 26, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 800, fontSize: 11, background: bg, color: c ?? "#fff",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+              }}>
                 {l}
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-500">ERP Admin Portal</p>
+          <p style={{ fontSize: 11, color: MUTED, letterSpacing: "0.5px", textTransform: "uppercase" }}>ERP Admin Portal</p>
         </div>
 
         {/* User info */}
-        <div className="px-5 py-4 border-b border-gray-800">
-          <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-          <p className="text-xs text-gray-400 truncate">{user.email}</p>
-          <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
-            style={{ background: "rgba(139,47,201,0.3)", color: "#c084fc", border: "1px solid rgba(139,47,201,0.5)" }}>
+        <div style={{ padding: "14px 18px", borderBottom: `1px solid ${BORDER}` }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {user.name}
+          </p>
+          <p style={{ fontSize: 11, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
+            {user.email}
+          </p>
+          <span style={{
+            display: "inline-block", marginTop: 6, fontSize: 10, padding: "2px 8px",
+            borderRadius: 4, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase",
+            background: "rgba(167,139,250,0.15)", color: VIOLET, border: `1px solid ${BORDER_VIOLET}`,
+          }}>
             {roleLabel[user.role]}
           </span>
           {user.tenantId && (
-            <p className="text-[10px] text-gray-500 mt-1 truncate">Tenant: {user.tenantId.slice(0, 8)}…</p>
+            <p style={{ fontSize: 10, color: "rgba(226,232,240,0.3)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              Tenant: {user.tenantId.slice(0, 8)}…
+            </p>
           )}
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
           {navItems.map(item => {
             const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
             return (
@@ -109,12 +164,19 @@ export default function AdminShell({ children }: AdminShellProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                  ${active
-                    ? "bg-purple-700/40 text-purple-200 border border-purple-600/40"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-gray-100"}`}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "9px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                  marginBottom: 2, textDecoration: "none", transition: "all 0.15s",
+                  ...(active
+                    ? { background: ACTIVE_BG, color: VIOLET, border: `1px solid ${BORDER_VIOLET}`, boxShadow: "0 0 12px rgba(167,139,250,0.1)" }
+                    : { background: "transparent", color: MUTED, border: "1px solid transparent" }
+                  ),
+                }}
+                onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = `rgba(0,229,255,0.05)`; (e.currentTarget as HTMLElement).style.color = TEXT; (e.currentTarget as HTMLElement).style.borderColor = `rgba(0,229,255,0.1)`; } }}
+                onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = MUTED; (e.currentTarget as HTMLElement).style.borderColor = "transparent"; } }}
               >
-                <span className="text-base">{item.icon}</span>
+                <span style={{ fontSize: 15 }}>{item.icon}</span>
                 {item.label}
               </Link>
             );
@@ -122,35 +184,56 @@ export default function AdminShell({ children }: AdminShellProps) {
         </nav>
 
         {/* Logout */}
-        <div className="px-3 py-4 border-t border-gray-800">
+        <div style={{ padding: "10px", borderTop: `1px solid ${BORDER}` }}>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-red-900/30 hover:text-red-300 transition-all"
+            style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 10,
+              padding: "9px 12px", borderRadius: 8, fontSize: 13,
+              background: "transparent", color: MUTED, border: "1px solid transparent",
+              cursor: "pointer", transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)"; (e.currentTarget as HTMLElement).style.color = "#fca5a5"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(248,113,113,0.2)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = MUTED; (e.currentTarget as HTMLElement).style.borderColor = "transparent"; }}
           >
-            <span className="text-base">🚪</span>
+            <span style={{ fontSize: 15 }}>🚪</span>
             Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden", position: "relative", zIndex: 1 }}>
         {/* Top bar */}
-        <header className="sticky top-0 z-10 flex items-center gap-4 px-5 py-3 bg-gray-950 border-b border-gray-800">
+        <header style={{
+          position: "sticky", top: 0, zIndex: 10,
+          display: "flex", alignItems: "center", gap: 16, padding: "0 20px", height: 52,
+          background: `${NAVY2}cc`, borderBottom: `1px solid ${BORDER}`,
+          backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+        }}>
+          {/* Mobile menu button */}
           <button
-            className="lg:hidden text-gray-400 hover:text-white"
+            style={{ display: "flex", background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 4 }}
+            className="lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="flex-1" />
-          <span className="text-xs text-gray-500">{new Date().toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })}</span>
+
+          {/* Cyan scan accent */}
+          <div style={{ flex: 1 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#00E676", boxShadow: "0 0 6px #00E676" }} />
+            <span style={{ fontSize: 11, color: MUTED, letterSpacing: "0.3px" }}>
+              {new Date().toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })}
+            </span>
+          </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-5 lg:p-8">
+        <main style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
           {children}
         </main>
       </div>
