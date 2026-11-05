@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Tenant {
   id: string;
@@ -76,7 +75,6 @@ export default function CommissionSettingsPage() {
   };
 
   return (
-    <AdminShell>
       <div className="max-w-3xl mx-auto">
 
         <div className="mb-6">
@@ -154,6 +152,5 @@ export default function CommissionSettingsPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }

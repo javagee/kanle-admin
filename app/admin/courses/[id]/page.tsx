@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import AdminShell from "@/components/AdminShell";
 
 interface Lesson  { id: string; title: string; video_type: string; video_url: string | null; video_duration_min: number; is_preview: boolean; sort_order: number; }
 interface Question { id: string; question: string; options: string[]; correct_index: number; explanation: string | null; sort_order: number; }
@@ -116,13 +115,12 @@ export default function CourseEditorPage() {
     load();
   };
 
-  if (loading) return <AdminShell><div className="text-center py-20" style={{ color: "rgba(255,255,255,0.35)" }}>Loading…</div></AdminShell>;
-  if (!course) return <AdminShell><div className="text-center py-20" style={{ color: "#fca5a5" }}>Course not found</div></AdminShell>;
+  if (loading) return <div className="text-center py-20" style={{ color: "rgba(255,255,255,0.35)" }}>Loading…</div>;
+  if (!course) return <div className="text-center py-20" style={{ color: "#fca5a5" }}>Course not found</div>;
 
   const modules = [...(course.lms_modules ?? [])].sort((a, b) => a.sort_order - b.sort_order);
 
   return (
-    <AdminShell>
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
@@ -386,7 +384,6 @@ export default function CourseEditorPage() {
           </button>
         </div>
       </div>
-    </AdminShell>
   );
 }
 

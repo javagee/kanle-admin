@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Customer { id: string; phone_number: string; display_name: string | null; language_pref: string; }
 interface Conversation {
@@ -132,7 +131,6 @@ export default function ConversationsPage() {
   };
 
   return (
-    <AdminShell>
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
@@ -411,6 +409,5 @@ export default function ConversationsPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }

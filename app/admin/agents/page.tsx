@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Agent {
   id: string;
@@ -43,7 +42,6 @@ export default function AgentsPage() {
   const totalEarned  = agents.reduce((s, a) => s + (a.total_earned_sgd ?? 0), 0);
 
   return (
-    <AdminShell>
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
@@ -141,6 +139,5 @@ export default function AgentsPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }

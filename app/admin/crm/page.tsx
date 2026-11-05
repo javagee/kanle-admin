@@ -1,9 +1,7 @@
 "use client";
-import AdminShell from "@/components/AdminShell";
 
 export default function CRMPage() {
   return (
-    <AdminShell>
       <div className="max-w-3xl mx-auto">
         <a href="/admin" className="text-sm hover:opacity-80 transition-opacity"
           style={{ color: "rgba(255,255,255,0.45)" }}>← Dashboard</a>
@@ -17,6 +15,5 @@ export default function CRMPage() {
           </p>
         </div>
       </div>
-    </AdminShell>
   );
 }

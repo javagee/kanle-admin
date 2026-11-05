@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Vendor {
   id: string;
@@ -81,7 +80,6 @@ export default function VendorsPage() {
   const pendingCount = vendors.filter(v => v.status === "pending").length;
 
   return (
-    <AdminShell>
       <div className="max-w-6xl mx-auto">
         {/* Page header */}
         <div className="mb-8">
@@ -235,6 +233,5 @@ export default function VendorsPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }

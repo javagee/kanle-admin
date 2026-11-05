@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 import Link from "next/link";
 
 interface Course {
@@ -110,7 +109,6 @@ export default function CoursesPage() {
     : 0;
 
   return (
-    <AdminShell>
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
@@ -340,7 +338,6 @@ export default function CoursesPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }
 

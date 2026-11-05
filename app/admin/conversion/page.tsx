@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface PersonaStats {
   persona: string;
@@ -80,7 +79,6 @@ export default function ConversionDashboard() {
   const maxWeekTotal = Math.max(...(data?.weekly_trend.map((w) => w.total) ?? [1]));
 
   return (
-    <AdminShell>
       <div className="max-w-6xl mx-auto">
 
         <div className="mb-8">
@@ -279,6 +277,5 @@ export default function ConversionDashboard() {
           Conversion data auto-updates on every booking and purchase · 90-day rolling window
         </p>
       </div>
-    </AdminShell>
   );
 }

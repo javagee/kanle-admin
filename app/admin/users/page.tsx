@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface AdminUser {
   id: string; email: string; name: string; role: string;
@@ -118,7 +117,7 @@ export default function UsersPage() {
   };
 
   return (
-    <AdminShell>
+    <>
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
@@ -330,6 +329,6 @@ export default function UsersPage() {
           </div>
         </div>
       )}
-    </AdminShell>
+    </>
   );
 }

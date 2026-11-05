@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Commission {
   id: string;
@@ -150,7 +149,6 @@ export default function AgentPayoutsPage() {
   const totalPending = agents.reduce((s, a) => s + a.total_pending_sgd, 0);
 
   return (
-    <AdminShell>
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
@@ -402,6 +400,5 @@ export default function AgentPayoutsPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }

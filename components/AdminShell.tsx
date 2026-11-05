@@ -36,6 +36,7 @@ const CONTENT_BG = "#0C1035";
 export default function AdminShell({ children }: AdminShellProps) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -177,19 +178,21 @@ export default function AdminShell({ children }: AdminShellProps) {
                      radial-gradient(ellipse at 90% 85%, rgba(0,229,255,0.05) 0%, transparent 40%)`,
       }} />
 
-      {/* ── Desktop sidebar (always visible) ─────────────────────────── */}
-      <aside style={{
-        width: 220, minWidth: 220, height: "100vh",
-        background: `linear-gradient(180deg, ${NAVY2} 0%, #0D1138 100%)`,
-        borderRight: `1px solid ${BORDER}`,
-        display: "flex", flexDirection: "column",
-        position: "relative", zIndex: 10, flexShrink: 0,
-        boxShadow: "4px 0 20px rgba(0,0,0,0.3)",
-      }}
-        className="hidden lg:flex"
-      >
-        <SidebarContent />
-      </aside>
+      {/* ── Desktop sidebar (toggleable) ─────────────────────────────── */}
+      {desktopOpen && (
+        <aside style={{
+          width: 220, minWidth: 220, height: "100vh",
+          background: `linear-gradient(180deg, ${NAVY2} 0%, #0D1138 100%)`,
+          borderRight: `1px solid ${BORDER}`,
+          display: "flex", flexDirection: "column",
+          position: "relative", zIndex: 10, flexShrink: 0,
+          boxShadow: "4px 0 20px rgba(0,0,0,0.3)",
+        }}
+          className="hidden lg:flex"
+        >
+          <SidebarContent />
+        </aside>
+      )}
 
       {/* ── Mobile sidebar (drawer) ────────────────────────────────────── */}
       {mobileOpen && (
@@ -221,11 +224,16 @@ export default function AdminShell({ children }: AdminShellProps) {
           borderBottom: `1px solid ${BORDER}`,
           backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
         }}>
-          {/* Mobile hamburger */}
+          {/* Hamburger — always visible; toggles desktop sidebar on lg+, opens mobile drawer on smaller screens */}
           <button
             style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 4, display: "flex" }}
-            className="lg:hidden"
-            onClick={() => setMobileOpen(true)}
+            onClick={() => {
+              if (window.innerWidth >= 1024) {
+                setDesktopOpen(o => !o);
+              } else {
+                setMobileOpen(true);
+              }
+            }}
           >
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

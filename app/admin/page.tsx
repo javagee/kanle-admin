@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Stats {
   vendors: { total: number; active: number };
@@ -54,7 +53,6 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <AdminShell>
       <div className="max-w-6xl mx-auto">
 
         {/* KPI Grid */}
@@ -281,6 +279,5 @@ export default function AdminDashboard() {
           IES Entrepreneurs (S) Pte Ltd · Commerce-as-a-Service Platform · v2.0.0
         </p>
       </div>
-    </AdminShell>
   );
 }

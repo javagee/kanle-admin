@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -216,7 +215,7 @@ export default function TenantsPage() {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <AdminShell>
+    <>
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
@@ -649,6 +648,6 @@ export default function TenantsPage() {
           </div>
         </div>
       )}
-    </AdminShell>
+    </>
   );
 }

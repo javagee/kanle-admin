@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Booking {
   id: string;
@@ -129,7 +128,6 @@ export default function BookingsPage() {
   };
 
   return (
-    <AdminShell>
       <div className="max-w-6xl mx-auto">
 
         {/* Page header */}
@@ -457,6 +455,5 @@ export default function BookingsPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import AdminShell from "@/components/AdminShell";
 
 interface Question {
   id: string;
@@ -121,13 +120,12 @@ export default function QuizEditorPage() {
     load();
   };
 
-  if (loading) return <AdminShell><div className="text-center py-20" style={{ color: "rgba(255,255,255,0.35)" }}>Loading…</div></AdminShell>;
-  if (!quiz)   return <AdminShell><div className="text-center py-20" style={{ color: "#fca5a5" }}>Quiz not found</div></AdminShell>;
+  if (loading) return <div className="text-center py-20" style={{ color: "rgba(255,255,255,0.35)" }}>Loading…</div>;
+  if (!quiz)   return <div className="text-center py-20" style={{ color: "#fca5a5" }}>Quiz not found</div>;
 
   const questions = [...(quiz.lms_questions ?? [])].sort((a, b) => a.sort_order - b.sort_order);
 
   return (
-    <AdminShell>
       <div className="max-w-3xl mx-auto">
 
         {/* Breadcrumb */}
@@ -300,6 +298,5 @@ export default function QuizEditorPage() {
         </div>
 
       </div>
-    </AdminShell>
   );
 }

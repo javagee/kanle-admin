@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Member {
   id: string;
@@ -77,7 +76,6 @@ export default function VouchersPage() {
   };
 
   return (
-    <AdminShell>
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
@@ -223,6 +221,5 @@ export default function VouchersPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }

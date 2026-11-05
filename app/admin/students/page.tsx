@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Course      { id: string; title: string; price_sgd: number; total_lessons: number; }
 interface Enrollment  { id: string; course_id: string; payment_status: string; payment_ref: string | null; payment_proof_url: string | null; amount_paid_sgd: number; enrolled_at: string; completed_at: string | null; lms_courses: Course | null; }
@@ -74,7 +73,6 @@ export default function StudentsPage() {
   const totalPending   = students.reduce((n, s) => n + s.lms_enrollments.filter(e => e.payment_status === "pending_verification").length, 0);
 
   return (
-    <AdminShell>
       <div className="max-w-5xl mx-auto">
         <a href="/admin" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "rgba(255,255,255,0.45)" }}>← Dashboard</a>
         <div className="flex items-center justify-between mt-1 mb-6">
@@ -252,6 +250,5 @@ export default function StudentsPage() {
           </p>
         )}
       </div>
-    </AdminShell>
   );
 }

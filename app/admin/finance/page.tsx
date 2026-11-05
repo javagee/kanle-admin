@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Summary {
   gross_sgd: number; net_sgd: number; platform_fees_sgd: number;
@@ -106,7 +105,6 @@ export default function FinancePage() {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <AdminShell>
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header */}
@@ -418,6 +416,5 @@ export default function FinancePage() {
           )}
         </div>
       </div>
-    </AdminShell>
   );
 }

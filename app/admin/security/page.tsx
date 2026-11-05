@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface SecurityEvent {
   id: string;
@@ -49,7 +48,6 @@ export default function SecurityPage() {
   useEffect(() => { load(); }, []);
 
   return (
-    <AdminShell>
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
@@ -133,6 +131,5 @@ export default function SecurityPage() {
           </div>
         )}
       </div>
-    </AdminShell>
   );
 }

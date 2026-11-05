@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminShell from "@/components/AdminShell";
 
 interface Member {
   id: string;
@@ -112,7 +111,7 @@ export default function SSEPage() {
   const f = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
   return (
-    <AdminShell>
+    <>
       <div style={{ maxWidth: 1100, margin: "0 auto", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
         {/* Header */}
@@ -350,6 +349,6 @@ export default function SSEPage() {
           </div>
         </div>
       )}
-    </AdminShell>
+    </>
   );
 }
