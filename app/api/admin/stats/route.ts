@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
     { count: activeVendors },
     { count: totalOrders },
     { count: totalBookings },
-    { count: totalAgents },
-    { count: sseMembers },
+    { data: agentRows },
+    { data: sseRows },
     { data: revenueRows },
     { data: commissionRows },
   ] = await Promise.all([
@@ -33,8 +33,8 @@ export async function GET(req: NextRequest) {
     byTenant(db.from("vendors").select("*", { count: "exact", head: true }).eq("status", "active")),
     byTenant(db.from("marketplace_orders").select("*", { count: "exact", head: true })),
     byTenant(db.from("bookings").select("*", { count: "exact", head: true })),
-    byTenant(db.from("sales_agents").select("*", { count: "exact", head: true }).eq("status", "active")),
-    byTenant(db.from("sse_members").select("*", { count: "exact", head: true }).eq("active", true)),
+    byTenant(db.from("sales_agents").select("id, status").eq("status", "active").limit(500)),
+    byTenant(db.from("sse_members").select("id, active").eq("active", true).limit(500)),
     byTenant(
       db.from("platform_transactions")
         .select("net_amount_sgd, platform_fee_sgd, created_at")
@@ -45,6 +45,9 @@ export async function GET(req: NextRequest) {
       ? db.from("agent_commissions").select("commission_sgd, status").eq("tenant_id", tenantId).limit(500)
       : db.from("agent_commissions").select("commission_sgd, status").limit(500),
   ]);
+
+  const totalAgents = agentRows?.length ?? 0;
+  const sseMembers  = sseRows?.length ?? 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const totalRevenue      = (revenueRows as any[])?.reduce((s: number, r: any) => s + (r.net_amount_sgd || 0), 0) ?? 0;
