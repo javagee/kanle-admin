@@ -153,6 +153,15 @@ export default function AdminDashboard() {
               accent: "#818cf8",
             },
             {
+              title: "🎓 LMS Platform",
+              desc: "Manage schools, online courses, student enrollments, and payment verification",
+              links: [
+                { label: "All courses →",    href: "/admin/courses" },
+                { label: "All students →",   href: "/admin/students" },
+              ],
+              accent: "#c084fc",
+            },
+            {
               title: "⚙️ Platform Settings",
               desc: "SSE rates, commission defaults, system config",
               links: [
