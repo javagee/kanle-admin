@@ -9,6 +9,10 @@ interface Conversation {
   handoff_reason: string | null; handoff_at: string | null;
   resolved_at: string | null; created_at: string; updated_at: string;
   customers: Customer | null;
+  quality_flag: string | null;
+  converted_at: string | null;
+  conversion_type: string | null;
+  closing_persona: string | null;
 }
 interface Message {
   id: string; role: string; message_type: string;
@@ -86,6 +90,18 @@ export default function ConversationsPage() {
     });
     await load(statusFilter);
     if (selected?.id === id) setSelected(prev => prev ? { ...prev, status } : null);
+    setUpdating(null);
+  };
+
+  const flagConversation = async (id: string, flag: string) => {
+    setUpdating(id);
+    await fetch("/api/admin/conversations/flag", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversation_id: id, quality_flag: flag }),
+    });
+    await load(statusFilter);
+    if (selected?.id === id) setSelected(prev => prev ? { ...prev, quality_flag: flag === "clear" ? null : flag } : null);
     setUpdating(null);
   };
 
@@ -202,6 +218,18 @@ export default function ConversationsPage() {
                             {c.customers.phone_number}
                           </p>
                         )}
+                        {c.quality_flag === "training_example" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold mt-1 inline-block"
+                            style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>
+                            🧠 Training
+                          </span>
+                        )}
+                        {c.conversion_type && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold mt-1 inline-block ml-1"
+                            style={{ background: "rgba(52,211,153,0.12)", color: "#6ee7b7", border: "1px solid rgba(52,211,153,0.2)" }}>
+                            ✓ {c.conversion_type.replace("_", " ")}
+                          </span>
+                        )}
                         {c.handoff_reason && (
                           <p className="text-xs mt-1 line-clamp-1" style={{ color: "#fde68a" }}>
                             ↗ {c.handoff_reason}
@@ -281,6 +309,24 @@ export default function ConversationsPage() {
                           className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all disabled:opacity-40"
                           style={{ background: "rgba(96,165,250,0.2)", color: "#93c5fd", border: "1px solid rgba(96,165,250,0.3)" }}>
                           {updating === selected.id ? "…" : "▶ Take over"}
+                        </button>
+                      )}
+                      {/* Level 1 RL: quality flag */}
+                      {selected.quality_flag === "training_example" ? (
+                        <button onClick={() => flagConversation(selected.id, "clear")}
+                          disabled={updating === selected.id}
+                          className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all disabled:opacity-40"
+                          style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.4)" }}
+                          title="Remove training example tag">
+                          {updating === selected.id ? "…" : "🧠 Training ✓"}
+                        </button>
+                      ) : (
+                        <button onClick={() => flagConversation(selected.id, "training_example")}
+                          disabled={updating === selected.id}
+                          className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all disabled:opacity-40"
+                          style={{ background: "rgba(0,229,255,0.08)", color: "#67e8f9", border: "1px solid rgba(0,229,255,0.2)" }}
+                          title="Tag as training example for AI memory (Level 1 RL)">
+                          {updating === selected.id ? "…" : "🧠 Tag as Training"}
                         </button>
                       )}
                     </div>
