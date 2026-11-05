@@ -14,7 +14,7 @@ const VALID_FLAGS = ["training_example", "good", "needs_review", "bad", "clear"]
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (isAuthError(auth)) return auth;
-  const { email } = auth;
+  const email: string = auth.session.email ?? "admin";
 
   const body = await req.json().catch(() => ({}));
   const { conversation_id, quality_flag, quality_note } = body;
