@@ -17,6 +17,17 @@ interface Stats {
   };
 }
 
+interface ConvStats {
+  summary: {
+    total_conversations: number;
+    total_converted: number;
+    overall_rate_pct: number;
+    avg_msgs_to_close: number;
+    best_persona: string | null;
+    best_persona_rate: number;
+  };
+}
+
 const GLASS_CARD = {
   background: "rgba(255,255,255,0.07)",
   backdropFilter: "blur(16px)",
@@ -28,13 +39,18 @@ const GLASS_CARD = {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [convStats, setConvStats] = useState<ConvStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/stats")
-      .then(r => r.json())
-      .then(d => { setStats(d); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch("/api/admin/stats").then(r => r.json()),
+      fetch("/api/admin/conversion-stats").then(r => r.json()).catch(() => null),
+    ]).then(([s, c]) => {
+      setStats(s);
+      setConvStats(c);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   return (
@@ -61,6 +77,62 @@ export default function AdminDashboard() {
               <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>{kpi.sub}</div>
             </div>
           ))}
+        </div>
+
+        {/* AI Conversion Intelligence strip */}
+        <div className="rounded-xl p-5 mb-6" style={{ ...GLASS_CARD, borderLeft: "3px solid #a78bfa" }}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-wide mb-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                🤖 AI Conversion Intelligence · 90-day
+              </div>
+              <div className="flex items-center gap-6 mt-2 flex-wrap">
+                {[
+                  {
+                    label: "Conversations",
+                    value: loading ? "—" : `${convStats?.summary.total_conversations ?? 0}`,
+                    color: "#a78bfa",
+                  },
+                  {
+                    label: "Converted",
+                    value: loading ? "—" : `${convStats?.summary.total_converted ?? 0}`,
+                    color: "#34d399",
+                  },
+                  {
+                    label: "Conversion Rate",
+                    value: loading ? "—" : `${convStats?.summary.overall_rate_pct ?? 0}%`,
+                    color: "#60a5fa",
+                  },
+                  {
+                    label: "Avg Messages to Close",
+                    value: loading ? "—" : `${convStats?.summary.avg_msgs_to_close ?? 0}`,
+                    color: "#fbbf24",
+                  },
+                  {
+                    label: "Best Persona",
+                    value: loading
+                      ? "—"
+                      : convStats?.summary.best_persona
+                      ? `${convStats.summary.best_persona} · ${convStats.summary.best_persona_rate}%`
+                      : "—",
+                    color: "#f472b6",
+                  },
+                ].map((m, i) => (
+                  <div key={i}>
+                    <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{m.label}</div>
+                    <div className="text-lg font-bold capitalize" style={{ color: m.color }}>{m.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <a
+              href="/admin/conversion"
+              className="text-sm font-medium px-4 py-2 rounded-lg transition-opacity hover:opacity-80"
+              style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}
+            >
+              View full report →
+            </a>
+          </div>
         </div>
 
         {/* Monthly Revenue Chart */}
@@ -160,6 +232,15 @@ export default function AdminDashboard() {
                 { label: "All students →",   href: "/admin/students" },
               ],
               accent: "#c084fc",
+            },
+            {
+              title: "📊 Conversion Intelligence",
+              desc: "AI persona conversion rates, weekly trends, avg messages to close",
+              links: [
+                { label: "Full conversion report →", href: "/admin/conversion" },
+                { label: "Conversation log →",       href: "/admin/conversations" },
+              ],
+              accent: "#a78bfa",
             },
             {
               title: "⚙️ Platform Settings",
