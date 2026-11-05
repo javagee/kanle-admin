@@ -21,7 +21,6 @@ interface AdminShellProps {
 // QuantumSHIELD × HipyHub brand tokens
 const NAVY   = "#0A0E2E";
 const NAVY2  = "#0F1442";
-const NAVY3  = "#161B52";
 const CYAN   = "#00E5FF";
 const BORDER = "rgba(0,229,255,0.15)";
 const BORDER_VIOLET = "rgba(167,139,250,0.22)";
