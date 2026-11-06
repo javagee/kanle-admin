@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   const dateTo        = searchParams.get("date_to");
   const search        = searchParams.get("search");
   const page          = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
-  const limit         = exportCsv ? 5000 : Math.min(parseInt(searchParams.get("limit") ?? "50"), 100);
+  const limit         = exportCsv ? 5000 : Math.min(parseInt(searchParams.get("limit") ?? "10"), 10);
 
   // ── Base query ────────────────────────────────────────────────────────────
   const buildQuery = () => {

@@ -139,28 +139,33 @@ export default function AdminDashboard() {
             <h2 className="text-sm font-semibold mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
               Monthly Revenue (SGD)
             </h2>
-            <div className="flex items-end gap-3 h-32">
-              {stats.revenue.monthly.map(({ month, amount }) => {
-                const max = Math.max(...stats.revenue.monthly.map(m => m.amount));
-                const pct = max > 0 ? (amount / max) * 100 : 0;
-                return (
-                  <div key={month} className="flex flex-col items-center flex-1">
-                    <div className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>
-                      S${amount.toFixed(0)}
+            <div className="flex items-end gap-3" style={{ height: 128 }}>
+              {(() => {
+                const max = Math.max(...stats.revenue.monthly.map(m => m.amount), 1);
+                const BAR_MAX_H = 80; // px reserved for bars (labels take the rest)
+                return stats.revenue.monthly.map(({ month, amount }) => {
+                  const barH = Math.max(Math.round((amount / max) * BAR_MAX_H), 4);
+                  return (
+                    <div key={month} className="flex flex-col items-center flex-1" style={{ height: 128 }}>
+                      <div className="flex-1 flex items-end w-full">
+                        <div className="text-xs w-full text-center mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+                          S${amount.toFixed(0)}
+                        </div>
+                      </div>
+                      <div
+                        className="w-full rounded-t-md"
+                        style={{
+                          height: barH,
+                          background: "linear-gradient(180deg, #c084fc, #7c3aed)",
+                        }}
+                      />
+                      <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                        {month.slice(5)}
+                      </div>
                     </div>
-                    <div
-                      className="w-full rounded-t-md transition-all"
-                      style={{
-                        height: `${Math.max(pct, 4)}%`,
-                        background: "linear-gradient(180deg, #c084fc, #7c3aed)",
-                      }}
-                    />
-                    <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
-                      {month.slice(5)}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           </div>
         )}
