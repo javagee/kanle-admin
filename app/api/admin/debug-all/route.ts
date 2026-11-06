@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   const { tenantId, session } = auth;
 
   const db = supabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const byTenant = (q: any) => tenantId ? q.eq("tenant_id", tenantId) : q;
 
   // Run each query individually to isolate failures
@@ -22,12 +23,14 @@ export async function GET(req: NextRequest) {
     : db.from("agent_commissions").select("commission_sgd, status").limit(10));
 
   // Finance summary query (from finance route)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let summaryQ: any = db.from("platform_transactions")
     .select("gross_amount_sgd, net_amount_sgd, platform_fee_sgd, agent_fee_sgd, vendor_payout_sgd, payment_status, transaction_type, created_at");
   if (tenantId) summaryQ = summaryQ.eq("tenant_id", tenantId);
   const finSummary = await summaryQ;
 
   // Agents route query
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let agentQ: any = db.from("sales_agents").select("id, name, status, total_earned_sgd").order("total_earned_sgd", { ascending: false });
   if (tenantId) agentQ = agentQ.eq("tenant_id", tenantId);
   const agentsRoute = await agentQ;
