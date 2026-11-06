@@ -56,7 +56,7 @@ export default function BookingsPage() {
   const [exporting, setExporting]       = useState(false);
   const [page, setPage]                 = useState(1);
   const [total, setTotal]               = useState(0);
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = 10;
 
   const load = async (s = statusFilter, p = payFilter, pg = page) => {
     setLoading(true);

@@ -7,6 +7,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchAllRows(baseQuery: any, pageSize = 10): Promise<any[]> {
+  const rows: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await baseQuery.range(from, from + pageSize - 1);
+    if (error || !data?.length) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return rows;
+}
+
 export const dynamic = "force-dynamic";
 
 function escapeCsv(val: unknown): string {
@@ -36,7 +50,7 @@ export async function GET(req: NextRequest) {
   const created_from   = searchParams.get("created_from"); // created_at range
   const created_to     = searchParams.get("created_to");
 
-  let query = db
+  let baseQ = db
     .from("bookings")
     .select(`
       id, booking_type, status, travel_date, adults, children,
@@ -45,21 +59,17 @@ export async function GET(req: NextRequest) {
       customers ( phone_number, display_name ),
       tour_packages ( name, name_zh, destination, price_adult_sgd )
     `)
-    .order("travel_date", { ascending: true })
-    .limit(2000);
+    .order("travel_date", { ascending: true });
 
-  if (tenantId)                               query = query.eq("tenant_id", tenantId);
-  if (status && status !== "all")             query = query.eq("status", status);
-  if (payment_status && payment_status !== "all") query = query.eq("payment_status", payment_status);
-  if (date_from)                              query = query.gte("travel_date", date_from);
-  if (date_to)                                query = query.lte("travel_date", date_to);
-  if (created_from)                           query = query.gte("created_at", created_from);
-  if (created_to)                             query = query.lte("created_at", created_to);
+  if (tenantId)                               baseQ = baseQ.eq("tenant_id", tenantId);
+  if (status && status !== "all")             baseQ = baseQ.eq("status", status);
+  if (payment_status && payment_status !== "all") baseQ = baseQ.eq("payment_status", payment_status);
+  if (date_from)                              baseQ = baseQ.gte("travel_date", date_from);
+  if (date_to)                                baseQ = baseQ.lte("travel_date", date_to);
+  if (created_from)                           baseQ = baseQ.gte("created_at", created_from);
+  if (created_to)                             baseQ = baseQ.lte("created_at", created_to);
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const bookings = data ?? [];
+  const bookings = await fetchAllRows(baseQ);
 
   const headers = [
     "Booking Ref", "Customer Name", "Phone", "Email",
