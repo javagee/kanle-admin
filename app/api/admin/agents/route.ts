@@ -5,6 +5,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchAllRows(baseQuery: any, pageSize = 10): Promise<any[]> {
+  const rows: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await baseQuery.range(from, from + pageSize - 1);
+    if (error || !data?.length) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return rows;
+}
+
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
@@ -14,25 +28,18 @@ export async function GET(req: NextRequest) {
 
   const db = supabaseAdmin();
 
-  let agentQuery = db
-    .from("sales_agents")
-    .select("*")
-    .order("total_earned_sgd", { ascending: false })
-    .limit(10); // Supabase max-rows limit on this project
-  if (tenantId) agentQuery = agentQuery.eq("tenant_id", tenantId);
+  const agentBase = tenantId
+    ? db.from("sales_agents").select("*").order("total_earned_sgd", { ascending: false }).eq("tenant_id", tenantId)
+    : db.from("sales_agents").select("*").order("total_earned_sgd", { ascending: false });
 
-  const { data: agents, error } = await agentQuery;
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const agents = await fetchAllRows(agentBase);
 
   // Enrich each agent with pending vs paid breakdown
   const enriched = await Promise.all(
     (agents ?? []).map(async (agent) => {
-      const { data: comms } = await db
-        .from("agent_commissions")
-        .select("commission_sgd, status")
-        .eq("agent_id", agent.id)
-        .limit(10);
+      const comms = await fetchAllRows(
+        db.from("agent_commissions").select("commission_sgd, status").eq("agent_id", agent.id)
+      );
 
       const pending = comms?.filter(c => c.status === "pending")
         .reduce((s, c) => s + (c.commission_sgd || 0), 0) ?? 0;

@@ -6,6 +6,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
+// Supabase max-rows is configured low; paginate to fetch all rows.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchAllRows(baseQuery: any, pageSize = 10): Promise<any[]> {
+  const rows: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await baseQuery.range(from, from + pageSize - 1);
+    if (error || !data?.length) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return rows;
+}
+
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
@@ -77,11 +92,13 @@ export async function GET(req: NextRequest) {
   if (txnErr) return NextResponse.json({ error: txnErr.message }, { status: 500 });
 
   // ── KPI summary (unfiltered totals for the tenant) ─────────────────────────
-  let summaryQ = db.from("platform_transactions")
-    .select("gross_amount_sgd, net_amount_sgd, platform_fee_sgd, agent_fee_sgd, vendor_payout_sgd, payment_status, transaction_type, created_at")
-    .limit(10); // Supabase max-rows limit on this project
-  if (tenantId) summaryQ = summaryQ.eq("tenant_id", tenantId);
-  const { data: allTxns } = await summaryQ;
+  const summaryBase = tenantId
+    ? db.from("platform_transactions")
+        .select("gross_amount_sgd, net_amount_sgd, platform_fee_sgd, agent_fee_sgd, vendor_payout_sgd, payment_status, transaction_type, created_at")
+        .eq("tenant_id", tenantId)
+    : db.from("platform_transactions")
+        .select("gross_amount_sgd, net_amount_sgd, platform_fee_sgd, agent_fee_sgd, vendor_payout_sgd, payment_status, transaction_type, created_at");
+  const allTxns = await fetchAllRows(summaryBase);
 
   const paid    = (allTxns ?? []).filter(t => t.payment_status === "paid");
   const pending = (allTxns ?? []).filter(t => t.payment_status === "pending");
