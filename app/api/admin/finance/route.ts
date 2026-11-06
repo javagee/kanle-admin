@@ -78,7 +78,8 @@ export async function GET(req: NextRequest) {
 
   // ── KPI summary (unfiltered totals for the tenant) ─────────────────────────
   let summaryQ = db.from("platform_transactions")
-    .select("gross_amount_sgd, net_amount_sgd, platform_fee_sgd, agent_fee_sgd, vendor_payout_sgd, payment_status, transaction_type, created_at");
+    .select("gross_amount_sgd, net_amount_sgd, platform_fee_sgd, agent_fee_sgd, vendor_payout_sgd, payment_status, transaction_type, created_at")
+    .limit(10); // Supabase max-rows limit on this project
   if (tenantId) summaryQ = summaryQ.eq("tenant_id", tenantId);
   const { data: allTxns } = await summaryQ;
 

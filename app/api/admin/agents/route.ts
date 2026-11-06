@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
   let agentQuery = db
     .from("sales_agents")
     .select("*")
-    .order("total_earned_sgd", { ascending: false });
+    .order("total_earned_sgd", { ascending: false })
+    .limit(10); // Supabase max-rows limit on this project
   if (tenantId) agentQuery = agentQuery.eq("tenant_id", tenantId);
 
   const { data: agents, error } = await agentQuery;
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest) {
       const { data: comms } = await db
         .from("agent_commissions")
         .select("commission_sgd, status")
-        .eq("agent_id", agent.id);
+        .eq("agent_id", agent.id)
+        .limit(10);
 
       const pending = comms?.filter(c => c.status === "pending")
         .reduce((s, c) => s + (c.commission_sgd || 0), 0) ?? 0;

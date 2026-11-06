@@ -39,11 +39,11 @@ export async function GET(req: NextRequest) {
       db.from("platform_transactions")
         .select("net_amount_sgd, platform_fee_sgd, created_at")
         .order("created_at", { ascending: false })
-        .limit(500)
+        .limit(10)  // Supabase max-rows limit on this project
     ),
     tenantId
-      ? db.from("agent_commissions").select("commission_sgd, status").eq("tenant_id", tenantId).limit(500)
-      : db.from("agent_commissions").select("commission_sgd, status").limit(500),
+      ? db.from("agent_commissions").select("commission_sgd, status").eq("tenant_id", tenantId).limit(10)
+      : db.from("agent_commissions").select("commission_sgd, status").limit(10),
   ]);
 
   const totalAgents = agentRows?.length ?? 0;
