@@ -98,7 +98,7 @@ export default function WorksheetsAdminPage() {
   async function fetchWorksheets() {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/worksheets`);
+      const r = await fetch("/api/admin/worksheets");
       const d = await r.json();
       setWorksheets(d.worksheets || []);
     } catch {
@@ -177,7 +177,7 @@ export default function WorksheetsAdminPage() {
         price_class_sgd: form.price_class_sgd ? parseFloat(form.price_class_sgd) : undefined,
         price_school_sgd: form.price_school_sgd ? parseFloat(form.price_school_sgd) : undefined,
       };
-      const createRes = await fetch(`${API}/api/worksheets/admin/create`, {
+      const createRes = await fetch("/api/admin/worksheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(record),
