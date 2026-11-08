@@ -9,7 +9,7 @@ import { requireAdmin, isAuthError } from "@/lib/api-auth";
 export const dynamic = "force-dynamic";
 
 // Supabase max-rows is configured low on this project; paginate to fetch all rows.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 async function fetchAllRows(baseQuery: any, pageSize = 10): Promise<any[]> {
   const rows: any[] = [];
   let from = 0;
@@ -22,6 +22,7 @@ async function fetchAllRows(baseQuery: any, pageSize = 10): Promise<any[]> {
   }
   return rows;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);

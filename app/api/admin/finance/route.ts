@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
 // Supabase max-rows is configured low; paginate to fetch all rows.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 async function fetchAllRows(baseQuery: any, pageSize = 10): Promise<any[]> {
   const rows: any[] = [];
   let from = 0;
@@ -20,6 +20,7 @@ async function fetchAllRows(baseQuery: any, pageSize = 10): Promise<any[]> {
   }
   return rows;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export const dynamic = "force-dynamic";
 
