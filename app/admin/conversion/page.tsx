@@ -215,31 +215,32 @@ export default function ConversionDashboard() {
           ) : (
             <div>
               {/* Stacked bar chart */}
-              <div className="flex items-end gap-2 h-40">
-                {(data?.weekly_trend ?? []).map((w) => {
-                  const totalPct = maxWeekTotal > 0 ? (w.total / maxWeekTotal) * 100 : 0;
-                  const convPct  = w.total > 0 ? (w.converted / w.total) * 100 : 0;
-                  return (
-                    <div key={w.week} className="flex flex-col items-center flex-1 gap-1">
-                      <div className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>
-                        {w.rate}%
-                      </div>
-                      <div className="relative w-full" style={{ height: `${Math.max(totalPct, 4)}%` }}>
-                        {/* Total bar (background) */}
-                        <div className="absolute inset-0 rounded-t-sm"
-                          style={{ background: "rgba(255,255,255,0.08)" }} />
-                        {/* Converted bar (overlay) */}
-                        <div className="absolute bottom-0 left-0 right-0 rounded-t-sm transition-all duration-700"
-                          style={{
-                            height: `${convPct}%`,
-                            background: "linear-gradient(180deg, #34d399, #059669)",
-                          }} />
-                      </div>
-                      <div className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{w.label}</div>
-                    </div>
-                  );
-                })}
-              </div>
+              {(() => {
+                const BAR_MAX_PX = 80;
+                return (
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: BAR_MAX_PX + 44 }}>
+                    {(data?.weekly_trend ?? []).map((w) => {
+                      const totalH = maxWeekTotal > 0 ? Math.max(Math.round((w.total / maxWeekTotal) * BAR_MAX_PX), 4) : 4;
+                      const convH  = w.total > 0 ? Math.round((w.converted / w.total) * totalH) : 0;
+                      return (
+                        <div key={w.week} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>
+                            {w.rate}%
+                          </div>
+                          <div style={{ position: "relative", width: "100%", height: totalH, borderRadius: "4px 4px 0 0", overflow: "hidden", background: "rgba(255,255,255,0.08)" }}>
+                            <div style={{
+                              position: "absolute", bottom: 0, left: 0, right: 0,
+                              height: convH,
+                              background: "linear-gradient(180deg, #34d399, #059669)",
+                            }} />
+                          </div>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>{w.label}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
               <div className="flex gap-4 mt-4 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
                 <div className="flex items-center gap-1">
                   <div className="w-3 h-3 rounded-sm" style={{ background: "rgba(255,255,255,0.08)" }} />

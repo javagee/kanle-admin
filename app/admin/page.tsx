@@ -139,34 +139,33 @@ export default function AdminDashboard() {
             <h2 className="text-sm font-semibold mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
               Monthly Revenue (SGD)
             </h2>
-            <div className="flex items-end gap-3" style={{ height: 128 }}>
-              {(() => {
-                const max = Math.max(...stats.revenue.monthly.map(m => m.amount), 1);
-                const BAR_MAX_H = 80; // px reserved for bars (labels take the rest)
-                return stats.revenue.monthly.map(({ month, amount }) => {
-                  const barH = Math.max(Math.round((amount / max) * BAR_MAX_H), 4);
-                  return (
-                    <div key={month} className="flex flex-col items-center flex-1" style={{ height: 128 }}>
-                      <div className="flex-1 flex items-end w-full">
-                        <div className="text-xs w-full text-center mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+            {(() => {
+              const max = Math.max(...stats.revenue.monthly.map(m => m.amount), 1);
+              const BAR_MAX_PX = 80;
+              return (
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: BAR_MAX_PX + 44 }}>
+                  {stats.revenue.monthly.map(({ month, amount }) => {
+                    const barH = Math.max(Math.round((amount / max) * BAR_MAX_PX), 4);
+                    return (
+                      <div key={month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4, whiteSpace: "nowrap" }}>
                           S${amount.toFixed(0)}
                         </div>
-                      </div>
-                      <div
-                        className="w-full rounded-t-md"
-                        style={{
+                        <div style={{
+                          width: "100%",
                           height: barH,
                           background: "linear-gradient(180deg, #c084fc, #7c3aed)",
-                        }}
-                      />
-                      <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
-                        {month.slice(5)}
+                          borderRadius: "4px 4px 0 0",
+                        }} />
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>
+                          {month.slice(5)}
+                        </div>
                       </div>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 
