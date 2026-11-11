@@ -23,10 +23,11 @@ export const sessionOptions: SessionOptions = {
   },
 };
 
-/** Navigation items visible to each role. */
-export const ROLE_NAV: Record<AdminRole, { label: string; href: string; icon: string }[]> = {
+/** Navigation items visible to each role. inbox: true marks items that display a badge. */
+export const ROLE_NAV: Record<AdminRole, { label: string; href: string; icon: string; inbox?: boolean }[]> = {
   super_admin: [
     { label: "Overview",       href: "/admin",               icon: "📊" },
+    { label: "Inbox",          href: "/admin/inbox",         icon: "📥", inbox: true },
     { label: "Tenants",        href: "/admin/tenants",       icon: "🏢" },
     { label: "Bookings",       href: "/admin/bookings",      icon: "🗓️" },
     { label: "Finance",        href: "/admin/finance",       icon: "💰" },
@@ -40,6 +41,7 @@ export const ROLE_NAV: Record<AdminRole, { label: string; href: string; icon: st
   ],
   tenant_admin: [
     { label: "Overview",       href: "/admin",               icon: "📊" },
+    { label: "Inbox",          href: "/admin/inbox",         icon: "📥", inbox: true },
     { label: "Bookings",       href: "/admin/bookings",      icon: "🗓️" },
     { label: "Finance",        href: "/admin/finance",       icon: "💰" },
     { label: "Agents",         href: "/admin/agents",        icon: "🤝" },

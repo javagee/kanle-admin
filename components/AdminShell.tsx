@@ -37,6 +37,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(true);
+  const [inboxCount, setInboxCount] = useState(0);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -49,6 +50,19 @@ export default function AdminShell({ children }: AdminShellProps) {
       .then(setUser)
       .catch(() => router.push("/login"));
   }, [router]);
+
+  // Poll inbox badge count every 60 seconds once logged in
+  useEffect(() => {
+    if (!user) return;
+    const fetchCount = () =>
+      fetch("/api/admin/inbox?count=1")
+        .then(r => r.ok ? r.json() : { count: 0 })
+        .then(d => setInboxCount(d.count ?? 0))
+        .catch(() => {});
+    fetchCount();
+    const id = setInterval(fetchCount, 60000);
+    return () => clearInterval(id);
+  }, [user]);
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -116,6 +130,7 @@ export default function AdminShell({ children }: AdminShellProps) {
       <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
         {navItems.map(item => {
           const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+          const badge = item.inbox && inboxCount > 0 ? inboxCount : 0;
           return (
             <Link
               key={item.href}
@@ -132,7 +147,19 @@ export default function AdminShell({ children }: AdminShellProps) {
               }}
             >
               <span style={{ fontSize: 15 }}>{item.icon}</span>
-              {item.label}
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {badge > 0 && (
+                <span style={{
+                  minWidth: 18, height: 18, borderRadius: 9,
+                  background: "#f87171", color: "#fff",
+                  fontSize: 10, fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  padding: "0 4px", flexShrink: 0,
+                  boxShadow: "0 0 6px rgba(248,113,113,0.5)",
+                }}>
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </Link>
           );
         })}
