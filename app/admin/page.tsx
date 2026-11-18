@@ -39,9 +39,11 @@ const GLASS_CARD = {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [convStats, setConvStats] = useState<ConvStats | null>(null);
+  const [role, setRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetch("/api/auth/me").then(r => r.ok ? r.json() : null).then(u => { if (u?.role) setRole(u.role); });
     Promise.all([
       fetch("/api/admin/stats").then(r => r.ok ? r.json() : null),
       fetch("/api/admin/conversion-stats").then(r => r.ok ? r.json() : null).catch(() => null),
@@ -59,7 +61,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Total Revenue",       value: loading ? "—" : `S$${stats?.revenue?.total_sgd?.toFixed(2) ?? 0}`,                    sub: "All transactions",     color: "#a78bfa" },
-            { label: "Platform Fees",        value: loading ? "—" : `S$${stats?.revenue?.platform_fees_sgd?.toFixed(2) ?? 0}`,            sub: "15% commission income", color: "#60a5fa" },
+            { label: role === "super_admin" ? "Platform Fees" : "Platform Fee Paid", value: loading ? "—" : `S$${stats?.revenue?.platform_fees_sgd?.toFixed(2) ?? 0}`, sub: role === "super_admin" ? "15% commission income" : "Charged by platform", color: "#60a5fa" },
             { label: "Active Vendors",       value: loading ? "—" : `${stats?.vendors?.active ?? 0}/${stats?.vendors?.total ?? 0}`,        sub: "Approved / Total",     color: "#34d399" },
             { label: "SSE Members",          value: loading ? "—" : `${stats?.sse?.members ?? 0}`,                                        sub: "Loyalty programme",    color: "#fbbf24" },
             { label: "Tour Bookings",        value: loading ? "—" : `${stats?.bookings?.total ?? 0}`,                                     sub: "All time",             color: "#a78bfa" },
@@ -171,7 +173,7 @@ export default function AdminDashboard() {
 
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
+          {([
             {
               title: "🏪 Vendor Management",
               desc: "Approve vendors, manage listings, view product catalog",
@@ -225,6 +227,7 @@ export default function AdminDashboard() {
                 { label: "Add new tenant →", href: "/admin/tenants" },
               ],
               accent: "#818cf8",
+              superOnly: true,
             },
             {
               title: "🎓 LMS Platform",
@@ -234,6 +237,7 @@ export default function AdminDashboard() {
                 { label: "All students →",   href: "/admin/students" },
               ],
               accent: "#c084fc",
+              superOnly: true,
             },
             {
               title: "📊 Conversion Intelligence",
@@ -251,8 +255,11 @@ export default function AdminDashboard() {
                 { label: "Commission rates →", href: "/admin/settings/commission" },
               ],
               accent: "#94a3b8",
+              superOnly: true,
             },
-          ].map((card, i) => (
+          ] as { title: string; desc: string; links: { label: string; href: string }[]; accent: string; superOnly?: boolean }[])
+          .filter(card => !card.superOnly || role === "super_admin")
+          .map((card, i) => (
             <div
               key={i}
               className="rounded-xl p-5 transition-all hover:scale-[1.01]"
