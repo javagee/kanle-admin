@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const NAVY2   = "#0F1442";
 const CYAN    = "#00E5FF";
 const VIOLET  = "#a78bfa";
 const PURPLE  = "#7c3aed";
