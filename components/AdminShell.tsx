@@ -5,6 +5,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ROLE_NAV, AdminRole } from "@/lib/session";
 
+interface TenantFeatures {
+  sse?: boolean;
+  vendors?: boolean;
+  worksheets?: boolean;
+}
+
 interface SessionUser {
   userId: string;
   email: string;
@@ -12,6 +18,7 @@ interface SessionUser {
   role: AdminRole;
   tenantId: string | null;
   vendorId: string | null;
+  features?: TenantFeatures | null;
 }
 
 interface AdminShellProps {
@@ -78,7 +85,17 @@ export default function AdminShell({ children }: AdminShellProps) {
     );
   }
 
-  const navItems = ROLE_NAV[user.role] ?? [];
+  const navItems = (() => {
+    const items = ROLE_NAV[user.role] ?? [];
+    if (user.role !== "tenant_admin") return items;
+    const f = user.features;
+    return items.filter(item => {
+      if (item.href === "/admin/worksheets") return f?.worksheets === true;
+      if (item.href === "/admin/sse")        return f == null ? true : f.sse !== false;
+      if (item.href === "/admin/vendors")    return f == null ? true : f.vendors !== false;
+      return true;
+    });
+  })();
 
   const roleLabel: Record<AdminRole, string> = {
     super_admin:     "Super Admin",

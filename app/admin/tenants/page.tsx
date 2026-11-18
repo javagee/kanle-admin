@@ -9,7 +9,7 @@ interface Tenant {
   whatsapp_number_id: string; ai_persona_name: string;
   plan: string; monthly_fee_sgd: number; platform_fee_pct: number;
   agent_fee_pct: number; primary_color: string; active: boolean;
-  created_at: string; metadata?: { tenant_type?: string };
+  created_at: string; metadata?: { tenant_type?: string; features?: { sse?: boolean; vendors?: boolean; worksheets?: boolean } };
 }
 
 interface AdminUser {
@@ -36,6 +36,7 @@ const EMPTY_TENANT = {
   ai_persona_name: "Serena", ai_persona_name_zh: "思琳娜",
   plan: "starter", monthly_fee_sgd: "299", platform_fee_pct: "15",
   agent_fee_pct: "15", primary_color: "#25D366", tenant_type: "booking",
+  feature_sse: false, feature_vendors: false, feature_worksheets: false,
 };
 
 const EMPTY_USER = { name: "", email: "", role: "tenant_admin", password: "" };
@@ -120,6 +121,7 @@ export default function TenantsPage() {
 
   const openEdit = (t: Tenant) => {
     setEditing(t);
+    const f = t.metadata?.features ?? {};
     setForm({
       name: t.name, name_zh: t.name_zh ?? "", slug: t.slug,
       whatsapp_number_id: t.whatsapp_number_id ?? "", whatsapp_token: "",
@@ -128,6 +130,10 @@ export default function TenantsPage() {
       platform_fee_pct: String(t.platform_fee_pct), agent_fee_pct: String(t.agent_fee_pct),
       primary_color: t.primary_color ?? "#25D366",
       tenant_type: t.metadata?.tenant_type ?? "booking",
+      // features default: sse/vendors ON if not explicitly set, worksheets OFF
+      feature_sse:        f.sse        !== false,
+      feature_vendors:    f.vendors    !== false,
+      feature_worksheets: f.worksheets === true,
     });
     setTenantError(""); setShowTF(true);
   };
@@ -138,7 +144,10 @@ export default function TenantsPage() {
     const method = editing ? "PATCH" : "POST";
     const payload = {
       ...form,
-      metadata: { tenant_type: form.tenant_type },
+      metadata: {
+        tenant_type: form.tenant_type,
+        features: { sse: form.feature_sse, vendors: form.feature_vendors, worksheets: form.feature_worksheets },
+      },
     };
     const res  = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await res.json();
@@ -566,6 +575,50 @@ export default function TenantsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Feature Access */}
+              <div className="mb-4">
+                <div className="border-t pt-4 mb-3" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                  <p className="text-xs font-semibold uppercase" style={{ color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em" }}>
+                    Feature Access (Opt-in)
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    Toggle which modules appear in the tenant&apos;s sidebar
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { key: "feature_sse",        label: "SSE Members",  icon: "🏅", desc: "Loyalty programme" },
+                    { key: "feature_vendors",     label: "Vendors",      icon: "🛍️", desc: "3rd-party add-ons" },
+                    { key: "feature_worksheets",  label: "Worksheets",   icon: "📚", desc: "WaaS / education" },
+                  ] as { key: "feature_sse" | "feature_vendors" | "feature_worksheets"; label: string; icon: string; desc: string }[]).map(ft => (
+                    <button
+                      key={ft.key}
+                      type="button"
+                      onClick={() => setForm(p => ({ ...p, [ft.key]: !p[ft.key] }))}
+                      style={{
+                        padding: "12px 14px", borderRadius: 10, textAlign: "left", cursor: "pointer",
+                        background: form[ft.key] ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${form[ft.key] ? "rgba(52,211,153,0.4)" : "rgba(255,255,255,0.1)"}`,
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 16 }}>{ft.icon}</span>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4,
+                          background: form[ft.key] ? "rgba(52,211,153,0.25)" : "rgba(255,255,255,0.08)",
+                          color: form[ft.key] ? "#6ee7b7" : "rgba(255,255,255,0.3)",
+                        }}>
+                          {form[ft.key] ? "ON" : "OFF"}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: form[ft.key] ? "#6ee7b7" : "rgba(255,255,255,0.45)", margin: 0 }}>{ft.label}</p>
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", margin: "2px 0 0" }}>{ft.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* Billing */}
               <div className="grid grid-cols-2 gap-4 mb-4">

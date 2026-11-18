@@ -45,8 +45,9 @@ export const ROLE_NAV: Record<AdminRole, { label: string; href: string; icon: st
     { label: "Bookings",       href: "/admin/bookings",      icon: "🗓️" },
     { label: "Finance",        href: "/admin/finance",       icon: "💰" },
     { label: "Agents",         href: "/admin/agents",        icon: "🤝" },
-    { label: "SSE Members",    href: "/admin/sse",           icon: "🏅" },
-    { label: "Vendors",        href: "/admin/vendors",       icon: "🛍️" },
+    { label: "SSE Members",    href: "/admin/sse",           icon: "🏅" },     // feature-gated: sse
+    { label: "Vendors",        href: "/admin/vendors",       icon: "🛍️" },    // feature-gated: vendors
+    { label: "Worksheets",     href: "/admin/worksheets",    icon: "📚" },     // feature-gated: worksheets
     { label: "Conversations",  href: "/admin/conversations", icon: "💬" },
     { label: "CRM",            href: "/admin/crm",           icon: "🗂️" },
     { label: "Security",       href: "/admin/security",      icon: "🔐" },

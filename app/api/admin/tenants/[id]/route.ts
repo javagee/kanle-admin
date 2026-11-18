@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     "name", "name_zh", "slug", "whatsapp_number_id", "whatsapp_token",
     "ai_persona_name", "ai_persona_name_zh", "ai_system_prompt",
     "plan", "monthly_fee_sgd", "platform_fee_pct", "agent_fee_pct",
-    "primary_color", "logo_url", "active", "plan_expires_at",
+    "primary_color", "logo_url", "active", "plan_expires_at", "metadata",
   ];
   const patch = Object.fromEntries(
     Object.entries(body).filter(([k, v]) => allowed.includes(k) && !(k === "whatsapp_token" && !v))
