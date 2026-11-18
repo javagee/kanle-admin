@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       id, slug, name, name_zh,
       whatsapp_number_id,
       ai_persona_name, ai_persona_name_zh, ai_system_prompt,
-      logo_url, primary_color, plan, plan_expires_at,
+      logo_url, primary_color, plan,
       monthly_fee_sgd, platform_fee_pct, agent_fee_pct,
       active, metadata, created_at, updated_at
     `)

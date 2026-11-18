@@ -54,15 +54,17 @@ export default function SettingsPage() {
   const [role, setRole]     = useState<string>("");
   const [tab, setTab]       = useState<Tab>("branding");
   const [form, setForm]     = useState<Partial<Tenant>>({});
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved]   = useState(false);
-  const [err, setErr]       = useState("");
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(false);
+  const [err, setErr]         = useState("");
+  const [loadErr, setLoadErr] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me").then(r => r.json()).then(u => setRole(u.role));
+    fetch("/api/auth/me").then(r => r.ok ? r.json() : null).then(u => { if (u?.role) setRole(u.role); });
     fetch("/api/admin/settings")
-      .then(r => r.json())
-      .then(d => { setTenant(d.tenant); setForm(d.tenant ?? {}); });
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => { setTenant(d.tenant ?? null); setForm(d.tenant ?? {}); })
+      .catch(() => setLoadErr(true));
   }, []);
 
   const set = (k: keyof Tenant, v: unknown) => setForm(f => ({ ...f, [k]: v }));
@@ -80,6 +82,13 @@ export default function SettingsPage() {
   };
 
   if (!tenant) {
+    if (loadErr) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, flexDirection: "column", gap: 12 }}>
+          <p style={{ color: "#f87171", fontSize: 14 }}>Failed to load settings. Please refresh the page.</p>
+        </div>
+      );
+    }
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
         <div style={{ width: 28, height: 28, border: `3px solid ${VIOLET}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
