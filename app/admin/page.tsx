@@ -43,8 +43,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/stats").then(r => r.json()),
-      fetch("/api/admin/conversion-stats").then(r => r.json()).catch(() => null),
+      fetch("/api/admin/stats").then(r => r.ok ? r.json() : null),
+      fetch("/api/admin/conversion-stats").then(r => r.ok ? r.json() : null).catch(() => null),
     ]).then(([s, c]) => {
       setStats(s);
       setConvStats(c);
@@ -58,14 +58,14 @@ export default function AdminDashboard() {
         {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Total Revenue",       value: loading ? "—" : `S$${stats?.revenue.total_sgd?.toFixed(2) ?? 0}`,                    sub: "All transactions",     color: "#a78bfa" },
-            { label: "Platform Fees",        value: loading ? "—" : `S$${stats?.revenue.platform_fees_sgd?.toFixed(2) ?? 0}`,            sub: "15% commission income", color: "#60a5fa" },
-            { label: "Active Vendors",       value: loading ? "—" : `${stats?.vendors.active ?? 0}/${stats?.vendors.total ?? 0}`,        sub: "Approved / Total",     color: "#34d399" },
-            { label: "SSE Members",          value: loading ? "—" : `${stats?.sse.members ?? 0}`,                                        sub: "Loyalty programme",    color: "#fbbf24" },
-            { label: "Tour Bookings",        value: loading ? "—" : `${stats?.bookings.total ?? 0}`,                                     sub: "All time",             color: "#a78bfa" },
-            { label: "Marketplace Orders",   value: loading ? "—" : `${stats?.orders.total ?? 0}`,                                       sub: "Vendor orders",        color: "#60a5fa" },
-            { label: "Active Agents",        value: loading ? "—" : `${stats?.agents.total ?? 0}`,                                       sub: "Sales partners",       color: "#34d399" },
-            { label: "Pending Payouts",      value: loading ? "—" : `S$${stats?.revenue.pending_agent_commission_sgd?.toFixed(2) ?? 0}`, sub: "Agent commissions",    color: "#f87171" },
+            { label: "Total Revenue",       value: loading ? "—" : `S$${stats?.revenue?.total_sgd?.toFixed(2) ?? 0}`,                    sub: "All transactions",     color: "#a78bfa" },
+            { label: "Platform Fees",        value: loading ? "—" : `S$${stats?.revenue?.platform_fees_sgd?.toFixed(2) ?? 0}`,            sub: "15% commission income", color: "#60a5fa" },
+            { label: "Active Vendors",       value: loading ? "—" : `${stats?.vendors?.active ?? 0}/${stats?.vendors?.total ?? 0}`,        sub: "Approved / Total",     color: "#34d399" },
+            { label: "SSE Members",          value: loading ? "—" : `${stats?.sse?.members ?? 0}`,                                        sub: "Loyalty programme",    color: "#fbbf24" },
+            { label: "Tour Bookings",        value: loading ? "—" : `${stats?.bookings?.total ?? 0}`,                                     sub: "All time",             color: "#a78bfa" },
+            { label: "Marketplace Orders",   value: loading ? "—" : `${stats?.orders?.total ?? 0}`,                                       sub: "Vendor orders",        color: "#60a5fa" },
+            { label: "Active Agents",        value: loading ? "—" : `${stats?.agents?.total ?? 0}`,                                       sub: "Sales partners",       color: "#34d399" },
+            { label: "Pending Payouts",      value: loading ? "—" : `S$${stats?.revenue?.pending_agent_commission_sgd?.toFixed(2) ?? 0}`, sub: "Agent commissions",    color: "#f87171" },
           ].map((kpi, i) => (
             <div key={i} className="rounded-xl p-5" style={GLASS_CARD}>
               <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "rgba(255,255,255,0.45)" }}>
@@ -88,29 +88,29 @@ export default function AdminDashboard() {
                 {[
                   {
                     label: "Conversations",
-                    value: loading ? "—" : `${convStats?.summary.total_conversations ?? 0}`,
+                    value: loading ? "—" : `${convStats?.summary?.total_conversations ?? 0}`,
                     color: "#a78bfa",
                   },
                   {
                     label: "Converted",
-                    value: loading ? "—" : `${convStats?.summary.total_converted ?? 0}`,
+                    value: loading ? "—" : `${convStats?.summary?.total_converted ?? 0}`,
                     color: "#34d399",
                   },
                   {
                     label: "Conversion Rate",
-                    value: loading ? "—" : `${convStats?.summary.overall_rate_pct ?? 0}%`,
+                    value: loading ? "—" : `${convStats?.summary?.overall_rate_pct ?? 0}%`,
                     color: "#60a5fa",
                   },
                   {
                     label: "Avg Messages to Close",
-                    value: loading ? "—" : `${convStats?.summary.avg_msgs_to_close ?? 0}`,
+                    value: loading ? "—" : `${convStats?.summary?.avg_msgs_to_close ?? 0}`,
                     color: "#fbbf24",
                   },
                   {
                     label: "Best Persona",
                     value: loading
                       ? "—"
-                      : convStats?.summary.best_persona
+                      : convStats?.summary?.best_persona
                       ? `${convStats.summary.best_persona} · ${convStats.summary.best_persona_rate}%`
                       : "—",
                     color: "#f472b6",
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Monthly Revenue Chart */}
-        {stats?.revenue.monthly && stats.revenue.monthly.length > 0 && (
+        {stats?.revenue?.monthly && stats.revenue.monthly.length > 0 && (
           <div className="rounded-xl p-6 mb-8" style={GLASS_CARD}>
             <h2 className="text-sm font-semibold mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
               Monthly Revenue (SGD)
