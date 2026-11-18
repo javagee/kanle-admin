@@ -66,6 +66,18 @@ export async function PATCH(req: NextRequest) {
   }
 
   const db = supabaseAdmin();
+
+  // Merge booking/notifications into existing metadata without overwriting other keys (e.g. tenant_type, features)
+  if (body.booking !== undefined || body.notifications !== undefined) {
+    const { data: cur } = await db.from("tenants").select("metadata").eq("id", tenantId).single();
+    const curMeta = (cur?.metadata as Record<string, unknown>) ?? {};
+    update.metadata = {
+      ...curMeta,
+      ...(body.booking       !== undefined ? { booking:       body.booking }       : {}),
+      ...(body.notifications !== undefined ? { notifications: body.notifications } : {}),
+    };
+  }
+
   const { error } = await db.from("tenants").update(update).eq("id", tenantId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
