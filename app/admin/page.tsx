@@ -202,6 +202,15 @@ export default function AdminDashboard() {
               accent: "#fbbf24",
             },
             {
+              title: "🗺️ Tour Packages",
+              desc: "Create and manage tour packages, pricing, departure days, inclusions",
+              links: [
+                { label: "All packages →",    href: "/admin/tours" },
+                { label: "Add package →",     href: "/admin/tours" },
+              ],
+              accent: "#34d399",
+            },
+            {
               title: "📦 Orders & Bookings",
               desc: "Tour bookings + marketplace orders + payment status",
               links: [

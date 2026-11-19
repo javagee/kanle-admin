@@ -43,6 +43,7 @@ export const ROLE_NAV: Record<AdminRole, { label: string; href: string; icon: st
     { label: "Overview",       href: "/admin",               icon: "📊" },
     { label: "Inbox",          href: "/admin/inbox",         icon: "📥", inbox: true },
     { label: "Bookings",       href: "/admin/bookings",      icon: "🗓️" },
+    { label: "Tour Packages",  href: "/admin/tours",         icon: "🗺️" },
     { label: "Finance",        href: "/admin/finance",       icon: "💰" },
     { label: "Agents",         href: "/admin/agents",        icon: "🤝" },
     { label: "SSE Members",    href: "/admin/sse",           icon: "🏅" },     // feature-gated: sse
