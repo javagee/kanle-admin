@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 
+interface TourPkg {
+  id: string;
+  name: string;
+  destination: string;
+  price_adult_sgd: number;
+  price_child_sgd: number;
+}
+
 interface Booking {
   id: string;
   booking_type: string;
@@ -58,6 +66,15 @@ export default function BookingsPage() {
   const [total, setTotal]               = useState(0);
   const PAGE_SIZE = 10;
 
+  // New booking modal
+  const [showNew, setShowNew]           = useState(false);
+  const [newPkgs, setNewPkgs]           = useState<TourPkg[]>([]);
+  const [creating, setCreating]         = useState(false);
+  const [newForm, setNewForm]           = useState({
+    package_id: "", travel_date: "", adults: "1", children: "0",
+    total_sgd: "", customer_phone: "", customer_name: "", customer_email: "", special_requests: "",
+  });
+
   const load = async (s = statusFilter, p = payFilter, pg = page) => {
     setLoading(true);
     const params = new URLSearchParams({ limit: String(PAGE_SIZE), page: String(pg) });
@@ -108,6 +125,49 @@ export default function BookingsPage() {
     setVerifying(null);
   };
 
+  const openNewBooking = async () => {
+    setShowNew(true);
+    if (newPkgs.length) return;
+    const res = await fetch("/api/admin/tours");
+    const data = await res.json();
+    setNewPkgs(data.packages ?? []);
+  };
+
+  const calcTotal = (form: typeof newForm, pkgs: TourPkg[]) => {
+    const pkg = pkgs.find(p => p.id === form.package_id);
+    if (!pkg) return "";
+    const total = pkg.price_adult_sgd * Number(form.adults || 0) + pkg.price_child_sgd * Number(form.children || 0);
+    return total.toFixed(2);
+  };
+
+  const setF = (k: keyof typeof newForm, v: string) => {
+    setNewForm(f => {
+      const updated = { ...f, [k]: v };
+      if (["package_id", "adults", "children"].includes(k)) {
+        updated.total_sgd = calcTotal(updated, newPkgs);
+      }
+      return updated;
+    });
+  };
+
+  const createBooking = async () => {
+    setCreating(true);
+    const res = await fetch("/api/admin/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newForm),
+    });
+    const data = await res.json();
+    setCreating(false);
+    if (!res.ok) { alert(data.error ?? "Failed to create booking"); return; }
+    setShowNew(false);
+    setNewForm({ package_id: "", travel_date: "", adults: "1", children: "0", total_sgd: "", customer_phone: "", customer_name: "", customer_email: "", special_requests: "" });
+    await load("all", "all", 1);
+    setStatusFilter("all");
+    setPayFilter("all");
+    setPage(1);
+  };
+
   const filtered = bookings.filter(b => {
     if (!search) return true;
     const s = search.toLowerCase();
@@ -143,6 +203,12 @@ export default function BookingsPage() {
               )}
             </p>
           </div>
+          <button
+            onClick={openNewBooking}
+            className="px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+            style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)", color: "#fff" }}>
+            + New Booking
+          </button>
         </div>
 
         {/* Summary pills */}
@@ -454,6 +520,117 @@ export default function BookingsPage() {
             </button>
           </div>
         )}
+
+      {/* New Booking Modal */}
+      {showNew && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-lg rounded-2xl p-6 overflow-y-auto max-h-[90vh]"
+            style={{ background: "rgba(15,10,30,0.98)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-white">New Walk-in / Phone Booking</h2>
+              <button onClick={() => setShowNew(false)} className="text-white opacity-40 hover:opacity-80 text-xl leading-none">×</button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Package */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Package *</label>
+                <select
+                  value={newForm.package_id}
+                  onChange={e => setF("package_id", e.target.value)}
+                  className="w-full rounded-xl px-4 py-2.5 text-sm text-white"
+                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }}>
+                  <option value="">Select a package…</option>
+                  {newPkgs.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} · {p.destination} — S${p.price_adult_sgd}/adult
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Travel date + pax */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Travel Date *</label>
+                  <input type="date" value={newForm.travel_date} onChange={e => setF("travel_date", e.target.value)}
+                    className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none", colorScheme: "dark" }} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Adults *</label>
+                  <input type="number" min="1" value={newForm.adults} onChange={e => setF("adults", e.target.value)}
+                    className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Children</label>
+                  <input type="number" min="0" value={newForm.children} onChange={e => setF("children", e.target.value)}
+                    className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }} />
+                </div>
+              </div>
+
+              {/* Total */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Total (SGD) — auto-calculated, editable</label>
+                <input type="number" step="0.01" value={newForm.total_sgd} onChange={e => setF("total_sgd", e.target.value)}
+                  placeholder="0.00"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm text-white"
+                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }} />
+              </div>
+
+              {/* Customer */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Phone *</label>
+                  <input type="tel" value={newForm.customer_phone} onChange={e => setF("customer_phone", e.target.value)}
+                    placeholder="+6591234567"
+                    className="w-full rounded-xl px-4 py-2.5 text-sm text-white"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Customer Name</label>
+                  <input type="text" value={newForm.customer_name} onChange={e => setF("customer_name", e.target.value)}
+                    placeholder="Full name"
+                    className="w-full rounded-xl px-4 py-2.5 text-sm text-white"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }} />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Email (for e-ticket)</label>
+                <input type="email" value={newForm.customer_email} onChange={e => setF("customer_email", e.target.value)}
+                  placeholder="customer@email.com"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm text-white"
+                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }} />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: "rgba(255,255,255,0.45)" }}>Special Requests</label>
+                <textarea rows={2} value={newForm.special_requests} onChange={e => setF("special_requests", e.target.value)}
+                  placeholder="Dietary requirements, accessibility needs…"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm text-white resize-none"
+                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", outline: "none" }} />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowNew(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                Cancel
+              </button>
+              <button onClick={createBooking} disabled={creating || !newForm.package_id || !newForm.travel_date || !newForm.adults || !newForm.customer_phone}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40 transition-all"
+                style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)", color: "#fff" }}>
+                {creating ? "Creating…" : "Create Booking"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
   );
 }

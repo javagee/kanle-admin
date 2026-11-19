@@ -1,5 +1,6 @@
 /**
- * GET  /api/admin/bookings  — list bookings with customer + package info
+ * GET   /api/admin/bookings  — list bookings with customer + package info
+ * POST  /api/admin/bookings  — create a walk-in / phone booking (admin only)
  * PATCH /api/admin/bookings  — update booking status or payment_status
  *
  * Tenant scoping: uses tenant_id column added by migration 021.
@@ -77,6 +78,61 @@ export async function PATCH(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+export async function POST(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  const { tenantId } = auth;
+
+  const body = await req.json();
+  const { package_id, travel_date, adults, children, customer_phone, customer_name, customer_email, special_requests, total_sgd } = body;
+
+  if (!package_id || !travel_date || !adults || !customer_phone) {
+    return NextResponse.json({ error: "package_id, travel_date, adults, customer_phone required" }, { status: 400 });
+  }
+
+  const db = supabaseAdmin();
+
+  // Find or create customer by phone
+  let customerId: string;
+  const { data: existing } = await db.from("customers").select("id").eq("phone_number", customer_phone).limit(1).single();
+  if (existing) {
+    customerId = existing.id;
+    if (customer_name) {
+      await db.from("customers").update({ display_name: customer_name }).eq("id", existing.id);
+    }
+  } else {
+    const { data: created, error: createErr } = await db.from("customers").insert({
+      phone_number: customer_phone,
+      display_name: customer_name || null,
+    }).select("id").single();
+    if (createErr || !created) return NextResponse.json({ error: createErr?.message ?? "Failed to create customer" }, { status: 500 });
+    customerId = created.id;
+  }
+
+  const { randomBytes } = await import("crypto");
+  const payment_ref = "BK-" + randomBytes(3).toString("hex").toUpperCase();
+
+  const { data: booking, error } = await db.from("bookings").insert({
+    tenant_id:        tenantId || null,
+    customer_id:      customerId,
+    package_id,
+    travel_date,
+    adults:           Number(adults),
+    children:         Number(children ?? 0),
+    total_sgd:        total_sgd ? Number(total_sgd) : null,
+    special_requests: special_requests || null,
+    customer_email:   customer_email || null,
+    booking_type:     "admin_booking",
+    status:           "pending",
+    payment_status:   "unpaid",
+    payment_ref,
+    context:          {},
+  }).select("id, payment_ref").single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ booking });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
