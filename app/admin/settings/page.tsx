@@ -49,6 +49,30 @@ interface NotifPrefs {
   on_cancellation: boolean;
 }
 
+type DayKey = "monday"|"tuesday"|"wednesday"|"thursday"|"friday"|"saturday"|"sunday";
+interface DayHours { enabled: boolean; open: string; close: string; }
+type BusinessHours = Record<DayKey, DayHours>;
+
+const DAY_CONFIG: { key: DayKey; label: string }[] = [
+  { key: "monday",    label: "Monday"    },
+  { key: "tuesday",   label: "Tuesday"   },
+  { key: "wednesday", label: "Wednesday" },
+  { key: "thursday",  label: "Thursday"  },
+  { key: "friday",    label: "Friday"    },
+  { key: "saturday",  label: "Saturday"  },
+  { key: "sunday",    label: "Sunday"    },
+];
+
+const DEFAULT_HOURS: BusinessHours = {
+  monday:    { enabled: true,  open: "09:00", close: "18:00" },
+  tuesday:   { enabled: true,  open: "09:00", close: "18:00" },
+  wednesday: { enabled: true,  open: "09:00", close: "18:00" },
+  thursday:  { enabled: true,  open: "09:00", close: "18:00" },
+  friday:    { enabled: true,  open: "09:00", close: "18:00" },
+  saturday:  { enabled: true,  open: "09:00", close: "13:00" },
+  sunday:    { enabled: false, open: "09:00", close: "13:00" },
+};
+
 type Tab = "branding" | "persona" | "booking" | "notifications" | "finance";
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -70,6 +94,7 @@ export default function SettingsPage() {
   const [form, setForm]     = useState<Partial<Tenant>>({});
   const [booking, setBooking] = useState<BookingPrefs>({ deposit_pct: 30, cancellation_days: 3, max_advance_days: 90, min_advance_hours: 24 });
   const [notifs, setNotifs]   = useState<NotifPrefs>({ email: "", whatsapp: "", on_booking: true, on_cancellation: false });
+  const [hours, setHours]     = useState<BusinessHours>({ ...DEFAULT_HOURS });
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
   const [err, setErr]         = useState("");
@@ -83,8 +108,9 @@ export default function SettingsPage() {
         setTenant(d.tenant ?? null);
         setForm(d.tenant ?? {});
         const meta = (d.tenant?.metadata ?? {}) as Record<string, unknown>;
-        if (meta.booking)       setBooking(b => ({ ...b, ...(meta.booking as Partial<BookingPrefs>) }));
-        if (meta.notifications) setNotifs(n => ({ ...n, ...(meta.notifications as Partial<NotifPrefs>) }));
+        if (meta.booking)        setBooking(b => ({ ...b, ...(meta.booking as Partial<BookingPrefs>) }));
+        if (meta.notifications)  setNotifs(n => ({ ...n, ...(meta.notifications as Partial<NotifPrefs>) }));
+        if (meta.business_hours) setHours(h => ({ ...h, ...(meta.business_hours as Partial<BusinessHours>) }));
       })
       .catch(() => setLoadErr(true));
   }, []);
@@ -92,13 +118,15 @@ export default function SettingsPage() {
   const set = (k: keyof Tenant, v: unknown) => setForm(f => ({ ...f, [k]: v }));
   const setB = (k: keyof BookingPrefs, v: unknown) => setBooking(b => ({ ...b, [k]: v }));
   const setN = (k: keyof NotifPrefs,  v: unknown) => setNotifs(n => ({ ...n, [k]: v }));
+  const setH = (day: DayKey, field: keyof DayHours, v: unknown) =>
+    setHours(h => ({ ...h, [day]: { ...h[day], [field]: v } }));
 
   const save = async () => {
     setSaving(true); setErr(""); setSaved(false);
     const r = await fetch("/api/admin/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, booking, notifications: notifs }),
+      body: JSON.stringify({ ...form, booking, notifications: notifs, business_hours: hours }),
     });
     if (r.ok) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
     else { const d = await r.json(); setErr(d.error ?? "Save failed"); }
@@ -271,6 +299,48 @@ export default function SettingsPage() {
                 <span style={{ fontSize: 13, color: MUTED }}>hours before departure</span>
               </div>
             </Field>
+          </div>
+
+          {/* Business Hours */}
+          <div>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: MUTED, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Business Hours
+            </label>
+            <p style={{ fontSize: 12, color: MUTED, margin: "0 0 10px" }}>
+              Days and hours your office accepts bookings and customer enquiries.
+            </p>
+            <div style={{ display: "grid", gap: 6 }}>
+              {DAY_CONFIG.map(({ key, label }) => (
+                <div key={key} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "8px 12px",
+                  borderRadius: 8, background: "rgba(255,255,255,0.03)",
+                  border: `1px solid ${hours[key].enabled ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.07)"}`,
+                }}>
+                  <button type="button" onClick={() => setH(key, "enabled", !hours[key].enabled)}
+                    style={{ width: 36, height: 20, borderRadius: 10, flexShrink: 0, position: "relative", cursor: "pointer",
+                      background: hours[key].enabled ? "#34d399" : "rgba(255,255,255,0.15)", border: "none", padding: 0, transition: "background 0.2s" }}>
+                    <div style={{ position: "absolute", top: 2, width: 16, height: 16, borderRadius: "50%", background: "#fff",
+                      left: hours[key].enabled ? 18 : 2, transition: "left 0.2s" }} />
+                  </button>
+                  <span style={{ width: 96, fontSize: 13, fontWeight: 500, color: hours[key].enabled ? TEXT : MUTED, flexShrink: 0 }}>
+                    {label}
+                  </span>
+                  {hours[key].enabled ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <input type="time" value={hours[key].open}
+                        onChange={e => setH(key, "open", e.target.value)}
+                        style={{ ...inputStyle, width: 108 }} />
+                      <span style={{ fontSize: 12, color: MUTED }}>to</span>
+                      <input type="time" value={hours[key].close}
+                        onChange={e => setH(key, "close", e.target.value)}
+                        style={{ ...inputStyle, width: 108 }} />
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: 12, color: MUTED }}>Closed</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div style={{ padding: "12px 14px", borderRadius: 8, background: "rgba(96,165,250,0.05)", border: "1px solid rgba(96,165,250,0.15)" }}>

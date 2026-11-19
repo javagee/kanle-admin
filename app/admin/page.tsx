@@ -40,10 +40,17 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [convStats, setConvStats] = useState<ConvStats | null>(null);
   const [role, setRole] = useState<string>("");
+  const [features, setFeatures] = useState<Record<string, boolean | undefined> | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Returns true for super_admin or when feature is not explicitly disabled
+  const feat = (key: string) => role === "super_admin" || features === null || features[key] !== false;
+
   useEffect(() => {
-    fetch("/api/auth/me").then(r => r.ok ? r.json() : null).then(u => { if (u?.role) setRole(u.role); });
+    fetch("/api/auth/me").then(r => r.ok ? r.json() : null).then(u => {
+      if (u?.role) setRole(u.role);
+      if (u?.features) setFeatures(u.features);
+    });
     Promise.all([
       fetch("/api/admin/stats").then(r => r.ok ? r.json() : null),
       fetch("/api/admin/conversion-stats").then(r => r.ok ? r.json() : null).catch(() => null),
@@ -59,16 +66,18 @@ export default function AdminDashboard() {
 
         {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
+          {([
             { label: "Total Revenue",       value: loading ? "—" : `S$${stats?.revenue?.total_sgd?.toFixed(2) ?? 0}`,                    sub: "All transactions",     color: "#a78bfa" },
             { label: role === "super_admin" ? "Platform Fees" : "Platform Fee Paid", value: loading ? "—" : `S$${stats?.revenue?.platform_fees_sgd?.toFixed(2) ?? 0}`, sub: role === "super_admin" ? "15% commission income" : "Charged by platform", color: "#60a5fa" },
-            { label: "Active Vendors",       value: loading ? "—" : `${stats?.vendors?.active ?? 0}/${stats?.vendors?.total ?? 0}`,        sub: "Approved / Total",     color: "#34d399" },
-            { label: "SSE Members",          value: loading ? "—" : `${stats?.sse?.members ?? 0}`,                                        sub: "Loyalty programme",    color: "#fbbf24" },
+            { label: "Active Vendors",       value: loading ? "—" : `${stats?.vendors?.active ?? 0}/${stats?.vendors?.total ?? 0}`,        sub: "Approved / Total",     color: "#34d399", featureKey: "vendors" },
+            { label: "SSE Members",          value: loading ? "—" : `${stats?.sse?.members ?? 0}`,                                        sub: "Loyalty programme",    color: "#fbbf24", featureKey: "sse" },
             { label: "Tour Bookings",        value: loading ? "—" : `${stats?.bookings?.total ?? 0}`,                                     sub: "All time",             color: "#a78bfa" },
-            { label: "Marketplace Orders",   value: loading ? "—" : `${stats?.orders?.total ?? 0}`,                                       sub: "Vendor orders",        color: "#60a5fa" },
+            { label: "Marketplace Orders",   value: loading ? "—" : `${stats?.orders?.total ?? 0}`,                                       sub: "Vendor orders",        color: "#60a5fa", featureKey: "vendors" },
             { label: "Active Agents",        value: loading ? "—" : `${stats?.agents?.total ?? 0}`,                                       sub: "Sales partners",       color: "#34d399" },
             { label: "Pending Payouts",      value: loading ? "—" : `S$${stats?.revenue?.pending_agent_commission_sgd?.toFixed(2) ?? 0}`, sub: "Agent commissions",    color: "#f87171" },
-          ].map((kpi, i) => (
+          ] as { label: string; value: string; sub: string; color: string; featureKey?: string }[])
+          .filter(kpi => !kpi.featureKey || feat(kpi.featureKey))
+          .map((kpi, i) => (
             <div key={i} className="rounded-xl p-5" style={GLASS_CARD}>
               <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "rgba(255,255,255,0.45)" }}>
                 {kpi.label}
@@ -168,6 +177,29 @@ export default function AdminDashboard() {
                 </div>
               );
             })()}
+          </div>
+        )}
+
+        {/* Getting started — shown only when there's no data yet */}
+        {!loading && stats && stats.bookings?.total === 0 && (stats.revenue?.total_sgd ?? 0) === 0 && (
+          <div className="rounded-xl p-6 mb-6" style={{ ...GLASS_CARD, borderLeft: "3px solid #34d399" }}>
+            <p className="text-xs uppercase tracking-wide mb-1 font-semibold" style={{ color: "#34d399" }}>🚀 Getting Started</p>
+            <p className="font-semibold text-white mb-1">Your dashboard is ready — here&apos;s what to do first</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+              {[
+                { step: "1", text: "Add your first tour package",  href: "/admin/tours",    color: "#34d399" },
+                { step: "2", text: "Configure booking preferences", href: "/admin/settings", color: "#a78bfa" },
+                { step: "3", text: "Set up your AI persona",        href: "/admin/settings", color: "#60a5fa" },
+              ].map(item => (
+                <a key={item.step} href={item.href}
+                  className="flex items-center gap-3 rounded-lg px-4 py-3 no-underline hover:opacity-80 transition-opacity"
+                  style={{ background: `${item.color}12`, border: `1px solid ${item.color}30` }}>
+                  <span className="text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${item.color}25`, color: item.color }}>{item.step}</span>
+                  <span className="text-sm font-medium" style={{ color: item.color }}>{item.text} →</span>
+                </a>
+              ))}
+            </div>
           </div>
         )}
 
