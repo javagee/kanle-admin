@@ -192,7 +192,7 @@ async function _createTransaction(db: any, bookingId: string, paymentRef: string
       tenant_id:            bookingTenantId,
       transaction_type:     "tour_booking",
       booking_id:           bookingId,
-      product_id:           booking.tour_packages?.id ?? null,
+      product_id:           null,
       gross_amount_sgd:     gross,
       net_amount_sgd:       gross - platformFeeSgd,
       platform_fee_sgd:     platformFeeSgd,

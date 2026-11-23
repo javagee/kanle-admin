@@ -233,7 +233,7 @@ async function createTransaction(db: any, booking: any) {
 
   await db.from("platform_transactions").insert({
     tenant_id: booking.tenant_id, transaction_type: "tour_booking", booking_id: booking.id,
-    product_id: booking.package_id, gross_amount_sgd: gross, net_amount_sgd: gross - platformFeeSgd,
+    product_id: null, gross_amount_sgd: gross, net_amount_sgd: gross - platformFeeSgd,
     platform_fee_sgd: platformFeeSgd, agent_fee_sgd: agentFeeSgd, vendor_payout_sgd: vendorPayout,
     agent_id: comm?.agent_id ?? null, payment_status: "paid", payment_ref: booking.payment_ref,
     payment_received_at: new Date().toISOString(),
