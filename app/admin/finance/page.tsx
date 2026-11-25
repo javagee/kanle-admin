@@ -2,6 +2,117 @@
 
 import { useEffect, useState, useCallback } from "react";
 
+// ── School operator revenue view ─────────────────────────────────────────────
+
+interface LmsSummary {
+  total_students: number; total_enrollments: number;
+  total_completions: number; total_revenue_sgd: number; pending_payments: number;
+}
+interface LmsCourse { id: string; title: string; }
+interface LmsByCourse { enrollments: number; completions: number; revenue_sgd: number; pending: number; }
+
+function SchoolRevenuePage() {
+  const [summary, setSummary] = useState<LmsSummary | null>(null);
+  const [byCourse, setByCourse] = useState<Record<string, LmsByCourse>>({});
+  const [courses, setCourses] = useState<LmsCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/admin/lms/stats").then(r => r.json()),
+      fetch("/api/admin/lms/courses").then(r => r.json()),
+    ]).then(([stats, cdata]) => {
+      setSummary(stats.summary ?? null);
+      setByCourse(stats.by_course ?? {});
+      setCourses(cdata.courses ?? []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const fmt = (n: number) => `S$${n.toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const GLASS: React.CSSProperties = {
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+  };
+
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
+      <div style={{ width: 28, height: 28, border: "3px solid #a78bfa", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div>
+        <a href="/admin" className="text-sm transition-opacity hover:opacity-80" style={{ color: "rgba(255,255,255,0.4)" }}>← Dashboard</a>
+        <h1 className="text-xl font-bold text-white mt-1">Revenue</h1>
+        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Enrollment revenue & course performance</p>
+      </div>
+
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        {[
+          { label: "Total Revenue",    value: fmt(summary?.total_revenue_sgd ?? 0), color: "#6ee7b7" },
+          { label: "Enrollments",      value: String(summary?.total_enrollments ?? 0), color: "#c084fc" },
+          { label: "Active Students",  value: String(summary?.total_students ?? 0), color: "#60a5fa" },
+          { label: "Completions",      value: String(summary?.total_completions ?? 0), color: "#34d399" },
+          { label: "Pending Payments", value: String(summary?.pending_payments ?? 0), color: "#fbbf24" },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={GLASS} className="p-4">
+            <p className="text-xs font-semibold mb-2" style={{ color: "rgba(255,255,255,0.45)" }}>{label}</p>
+            <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Per-course breakdown */}
+      <div style={GLASS} className="overflow-hidden">
+        <div className="px-5 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <p className="text-sm font-semibold text-white">Revenue by Course</p>
+        </div>
+        {courses.length === 0 ? (
+          <div className="py-12 text-center text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>No courses yet</div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                {["Course", "Enrollments", "Completions", "Pending", "Revenue"].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {courses.map(c => {
+                const s = byCourse[c.id] ?? { enrollments: 0, completions: 0, revenue_sgd: 0, pending: 0 };
+                return (
+                  <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    <td className="px-4 py-3 text-white font-medium">{c.title}</td>
+                    <td className="px-4 py-3" style={{ color: "#c084fc" }}>{s.enrollments}</td>
+                    <td className="px-4 py-3" style={{ color: "#34d399" }}>{s.completions}</td>
+                    <td className="px-4 py-3">
+                      {s.pending > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                          style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
+                          {s.pending} pending
+                        </span>
+                      )}
+                      {s.pending === 0 && <span style={{ color: "rgba(255,255,255,0.2)" }}>—</span>}
+                    </td>
+                    <td className="px-4 py-3 font-bold" style={{ color: "#6ee7b7" }}>{fmt(s.revenue_sgd)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main finance page (tours / platform) ─────────────────────────────────────
+
 interface Summary {
   gross_sgd: number; net_sgd: number; platform_fees_sgd: number;
   agent_fees_sgd: number; vendor_payouts_sgd: number;
@@ -43,6 +154,16 @@ const TYPE_LABELS: Record<string, string> = {
 const fmt = (n: number) => `S$${n.toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function FinancePage() {
+  const [role, setRole] = useState<string | null>(null);
+  useEffect(() => {
+    fetch("/api/auth/me").then(r => r.ok ? r.json() : null).then(u => setRole(u?.role ?? ""));
+  }, []);
+  if (role === null) return null;
+  if (role === "school_operator") return <SchoolRevenuePage />;
+  return <TourFinancePage />;
+}
+
+function TourFinancePage() {
   const [summary, setSummary]   = useState<Summary | null>(null);
   const [monthly, setMonthly]   = useState<MonthlyPoint[]>([]);
   const [byType, setByType]     = useState<TypeBreakdown[]>([]);

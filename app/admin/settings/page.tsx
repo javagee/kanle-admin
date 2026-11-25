@@ -151,9 +151,11 @@ export default function SettingsPage() {
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: "branding",      label: "Branding",      icon: "🎨" },
-    { key: "persona",       label: "AI Persona",    icon: "🤖" },
-    { key: "booking",       label: "Booking",       icon: "🗓️" },
-    { key: "notifications", label: "Notifications", icon: "🔔" },
+    ...( role !== "school_operator" ? [
+      { key: "persona" as Tab,       label: "AI Persona",    icon: "🤖" },
+      { key: "booking" as Tab,       label: "Booking",       icon: "🗓️" },
+      { key: "notifications" as Tab, label: "Notifications", icon: "🔔" },
+    ] : []),
     ...(role === "super_admin" ? [{ key: "finance" as Tab, label: "Finance", icon: "💰" }] : []),
   ];
 
