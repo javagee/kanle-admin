@@ -27,7 +27,40 @@ async function fetchAllRows(baseQuery: any, pageSize = 10): Promise<any[]> {
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (isAuthError(auth)) return auth;
-  const { tenantId } = auth;
+  const { tenantId, session } = auth;
+
+  // School operator gets LMS / worksheet stats only
+  if (session.role === "school_operator") {
+    const db = supabaseAdmin();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const byT = (q: any) => tenantId ? q.eq("tenant_id", tenantId) : q;
+    const [
+      { count: worksheets },
+      { count: courses },
+      { count: students },
+      { count: enrollments },
+    ] = await Promise.all([
+      byT(db.from("worksheets").select("*", { count: "exact", head: true }).eq("active", true)),
+      byT(db.from("lms_courses").select("*", { count: "exact", head: true }).eq("is_published", true)),
+      byT(db.from("lms_students").select("*", { count: "exact", head: true }).eq("is_active", true)),
+      byT(db.from("lms_enrollments").select("*", { count: "exact", head: true })),
+    ]);
+    const paidRows = await fetchAllRows(
+      byT(db.from("lms_enrollments").select("amount_paid_sgd").eq("payment_status", "paid"))
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const revenue = paidRows.reduce((s: number, r: any) => s + (Number(r.amount_paid_sgd) || 0), 0);
+    return NextResponse.json({
+      school: {
+        worksheets:   worksheets   ?? 0,
+        courses:      courses      ?? 0,
+        students:     students     ?? 0,
+        enrollments:  enrollments  ?? 0,
+        revenue_sgd:  Math.round(revenue * 100) / 100,
+      },
+      _scope: "school",
+    });
+  }
 
   const db = supabaseAdmin();
 

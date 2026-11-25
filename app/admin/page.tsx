@@ -14,6 +14,13 @@ interface Stats {
     pending_agent_commission_sgd: number;
     monthly: { month: string; amount: number }[];
   };
+  school?: {
+    worksheets: number;
+    courses: number;
+    students: number;
+    enrollments: number;
+    revenue_sgd: number;
+  };
 }
 
 interface ConvStats {
@@ -64,9 +71,21 @@ export default function AdminDashboard() {
   return (
       <div className="max-w-6xl mx-auto">
 
-        {/* KPI Grid */}
+        {/* KPI Grid — school_operator sees LMS stats; everyone else sees tour/platform stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {([
+          {role === "school_operator" ? ([
+            { label: "Active Worksheets", value: loading ? "—" : `${stats?.school?.worksheets ?? 0}`,                         sub: "Published & available", color: "#a78bfa" },
+            { label: "Published Courses",  value: loading ? "—" : `${stats?.school?.courses ?? 0}`,                           sub: "Live courses",          color: "#60a5fa" },
+            { label: "Active Students",    value: loading ? "—" : `${stats?.school?.students ?? 0}`,                          sub: "Registered learners",  color: "#34d399" },
+            { label: "Total Enrolments",   value: loading ? "—" : `${stats?.school?.enrollments ?? 0}`,                      sub: "All time",              color: "#fbbf24" },
+            { label: "Course Revenue",     value: loading ? "—" : `S$${(stats?.school?.revenue_sgd ?? 0).toFixed(2)}`,        sub: "Paid enrolments",      color: "#f472b6" },
+          ] as { label: string; value: string; sub: string; color: string }[]).map((kpi, i) => (
+            <div key={i} className="rounded-xl p-5" style={GLASS_CARD}>
+              <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "rgba(255,255,255,0.45)" }}>{kpi.label}</div>
+              <div className="text-2xl font-bold" style={{ color: kpi.color }}>{kpi.value}</div>
+              <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>{kpi.sub}</div>
+            </div>
+          )) : ([
             { label: "Total Revenue",       value: loading ? "—" : `S$${stats?.revenue?.total_sgd?.toFixed(2) ?? 0}`,                    sub: "All transactions",     color: "#a78bfa" },
             { label: role === "super_admin" ? "Platform Fees" : "Platform Fee Paid", value: loading ? "—" : `S$${stats?.revenue?.platform_fees_sgd?.toFixed(2) ?? 0}`, sub: role === "super_admin" ? "15% commission income" : "Charged by platform", color: "#60a5fa" },
             { label: "Active Vendors",       value: loading ? "—" : `${stats?.vendors?.active ?? 0}/${stats?.vendors?.total ?? 0}`,        sub: "Approved / Total",     color: "#34d399", featureKey: "vendors" },
@@ -88,7 +107,8 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* AI Conversion Intelligence strip */}
+        {/* AI Conversion Intelligence strip — not relevant for school operators */}
+        {role !== "school_operator" && (
         <div className="rounded-xl p-5 mb-6" style={{ ...GLASS_CARD, borderLeft: "3px solid #a78bfa" }}>
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
@@ -143,6 +163,7 @@ export default function AdminDashboard() {
             </a>
           </div>
         </div>
+        )}
 
         {/* Monthly Revenue Chart */}
         {stats?.revenue?.monthly && stats.revenue.monthly.length > 0 && (
@@ -180,8 +201,29 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Getting started — shown only when there's no data yet */}
-        {!loading && stats && stats.bookings?.total === 0 && (stats.revenue?.total_sgd ?? 0) === 0 && (
+        {/* Getting started — scoped to role, shown only when there's no data yet */}
+        {!loading && stats && role === "school_operator" && (stats.school?.worksheets ?? 0) === 0 && (stats.school?.students ?? 0) === 0 && (
+          <div className="rounded-xl p-6 mb-6" style={{ ...GLASS_CARD, borderLeft: "3px solid #34d399" }}>
+            <p className="text-xs uppercase tracking-wide mb-1 font-semibold" style={{ color: "#34d399" }}>🚀 Getting Started</p>
+            <p className="font-semibold text-white mb-1">Your school portal is ready — here&apos;s what to do first</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+              {[
+                { step: "1", text: "Upload your first worksheet", href: "/admin/worksheets", color: "#34d399" },
+                { step: "2", text: "Create a course",             href: "/admin/courses",    color: "#a78bfa" },
+                { step: "3", text: "Enrol your first student",    href: "/admin/students",   color: "#60a5fa" },
+              ].map(item => (
+                <a key={item.step} href={item.href}
+                  className="flex items-center gap-3 rounded-lg px-4 py-3 no-underline hover:opacity-80 transition-opacity"
+                  style={{ background: `${item.color}12`, border: `1px solid ${item.color}30` }}>
+                  <span className="text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${item.color}25`, color: item.color }}>{item.step}</span>
+                  <span className="text-sm font-medium" style={{ color: item.color }}>{item.text} →</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+        {!loading && stats && role !== "school_operator" && stats.bookings?.total === 0 && (stats.revenue?.total_sgd ?? 0) === 0 && (
           <div className="rounded-xl p-6 mb-6" style={{ ...GLASS_CARD, borderLeft: "3px solid #34d399" }}>
             <p className="text-xs uppercase tracking-wide mb-1 font-semibold" style={{ color: "#34d399" }}>🚀 Getting Started</p>
             <p className="font-semibold text-white mb-1">Your dashboard is ready — here&apos;s what to do first</p>
@@ -207,6 +249,33 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {([
             {
+              title: "📚 Worksheets",
+              desc: "Upload and manage worksheets, set pricing, track downloads",
+              links: [
+                { label: "All worksheets →", href: "/admin/worksheets" },
+              ],
+              accent: "#a78bfa",
+              schoolOnly: true,
+            },
+            {
+              title: "🎓 Courses",
+              desc: "Create courses, manage modules and lessons, publish to students",
+              links: [
+                { label: "All courses →",   href: "/admin/courses" },
+              ],
+              accent: "#60a5fa",
+              schoolOnly: true,
+            },
+            {
+              title: "👩‍🎓 Students",
+              desc: "Student records, enrolments, payment verification",
+              links: [
+                { label: "All students →",   href: "/admin/students" },
+              ],
+              accent: "#34d399",
+              schoolOnly: true,
+            },
+            {
               title: "🏪 Vendor Management",
               desc: "Approve vendors, manage listings, view product catalog",
               links: [
@@ -214,6 +283,7 @@ export default function AdminDashboard() {
                 { label: "All vendors →",        href: "/admin/vendors" },
               ],
               accent: "#34d399",
+              hideForSchool: true,
             },
             {
               title: "👥 Sales Agents",
@@ -223,6 +293,7 @@ export default function AdminDashboard() {
                 { label: "Pending payouts →",  href: "/admin/agents/payouts" },
               ],
               accent: "#60a5fa",
+              hideForSchool: true,
             },
             {
               title: "💳 SSE Loyalty",
@@ -232,6 +303,7 @@ export default function AdminDashboard() {
                 { label: "Vouchers →",     href: "/admin/sse/vouchers" },
               ],
               accent: "#fbbf24",
+              hideForSchool: true,
             },
             {
               title: "🗺️ Tour Packages",
@@ -241,6 +313,7 @@ export default function AdminDashboard() {
                 { label: "Add package →",     href: "/admin/tours" },
               ],
               accent: "#34d399",
+              hideForSchool: true,
             },
             {
               title: "📦 Orders & Bookings",
@@ -250,6 +323,7 @@ export default function AdminDashboard() {
                 { label: "Marketplace orders →", href: "/admin/orders" },
               ],
               accent: "#a78bfa",
+              hideForSchool: true,
             },
             {
               title: "💬 Conversations",
@@ -259,6 +333,7 @@ export default function AdminDashboard() {
                 { label: "Security log →",  href: "/admin/security" },
               ],
               accent: "#f472b6",
+              hideForSchool: true,
             },
             {
               title: "🏢 Tenants",
@@ -288,6 +363,7 @@ export default function AdminDashboard() {
                 { label: "Conversation log →",       href: "/admin/conversations" },
               ],
               accent: "#a78bfa",
+              hideForSchool: true,
             },
             {
               title: "⚙️ Platform Settings",
@@ -298,8 +374,10 @@ export default function AdminDashboard() {
               accent: "#94a3b8",
               superOnly: true,
             },
-          ] as { title: string; desc: string; links: { label: string; href: string }[]; accent: string; superOnly?: boolean }[])
+          ] as { title: string; desc: string; links: { label: string; href: string }[]; accent: string; superOnly?: boolean; schoolOnly?: boolean; hideForSchool?: boolean }[])
           .filter(card => !card.superOnly || role === "super_admin")
+          .filter(card => !card.schoolOnly || role === "school_operator")
+          .filter(card => !card.hideForSchool || role !== "school_operator")
           .map((card, i) => (
             <div
               key={i}
