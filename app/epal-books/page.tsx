@@ -1,24 +1,40 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function BooksPage() {
-  const [loaded, setLoaded] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [fading, setFading]   = useState(false);
+  const iframeLoaded = useRef(false);
+
+  function dismiss() {
+    setFading(true);
+    setTimeout(() => setVisible(false), 600);
+  }
+
+  function onIframeLoad() {
+    if (iframeLoaded.current) return;
+    iframeLoaded.current = true;
+    // Keep overlay at least 4s so WASM has time to init before it disappears
+    setTimeout(dismiss, 4000);
+  }
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#111" }}>
-      {/* Branded loading screen */}
-      {!loaded && (
+
+      {visible && (
         <div style={{
           position: "absolute", inset: 0, zIndex: 10,
           background: "#0d0820",
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 24,
+          transition: "opacity 0.6s ease",
+          opacity: fading ? 0 : 1,
+          pointerEvents: fading ? "none" : "auto",
         }}>
-          {/* Logo */}
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <span style={{ fontSize: 36 }}>📚</span>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <span style={{ fontSize: 40 }}>📚</span>
             <div>
-              <div style={{ color: "#fff", fontWeight: 800, fontSize: 22, letterSpacing: 0.5 }}>
+              <div style={{ color: "#fff", fontWeight: 800, fontSize: 24, letterSpacing: 0.5 }}>
                 ePAL Books
               </div>
               <div style={{ color: "#a78bfa", fontSize: 12, letterSpacing: 1 }}>
@@ -27,9 +43,8 @@ export default function BooksPage() {
             </div>
           </div>
 
-          {/* Spinner */}
           <div style={{
-            width: 40, height: 40,
+            width: 44, height: 44,
             border: "3px solid rgba(167,139,250,0.2)",
             borderTopColor: "#a78bfa",
             borderRadius: "50%",
@@ -49,7 +64,7 @@ export default function BooksPage() {
         style={{ width: "100%", height: "100%", border: "none", display: "block" }}
         allow="autoplay"
         title="ePAL Books"
-        onLoad={() => setLoaded(true)}
+        onLoad={onIframeLoad}
       />
     </div>
   );
