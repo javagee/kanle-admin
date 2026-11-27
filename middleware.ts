@@ -6,7 +6,7 @@ import { sessionOptions, AdminSession, AdminRole } from "@/lib/session";
 const ROLE_PATHS: Record<AdminRole, RegExp> = {
   super_admin:     /.*/,   // all paths
   tenant_admin:    /^\/admin(\/bookings|\/vendors|\/worksheets|\/agents|\/finance|\/settings|\/crm)?(\/.*)?$|^\/admin$/,
-  school_operator: /^\/admin(\/worksheets|\/courses|\/students|\/settings|\/enrollments|\/inbox|\/finance)?(\/.*)?$|^\/admin$/,
+  school_operator: /^\/admin(\/worksheets|\/courses|\/students|\/settings|\/enrollments|\/inbox|\/finance)?(\/.*)?$|^\/admin$|^\/epal$/,
   vendor_admin:    /^\/admin(\/products|\/orders|\/settings)?(\/.*)?$|^\/admin$/,
 };
 
