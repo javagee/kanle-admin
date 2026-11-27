@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     description: "e-PAL Textbooks, Activity Books and Readers for Nursery, K1 and K2.",
     siteName: "HipyHub Education",
     type: "website",
+    images: [{ url: "/og-epal-books.png", width: 1263, height: 952 }],
   },
 };
 
