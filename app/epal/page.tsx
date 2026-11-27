@@ -35,7 +35,7 @@ export default function EpalPage() {
 
       {/* Full-height content frame */}
       <iframe
-        src="https://epal-books.pages.dev/index.htm"
+        src="https://epal-books.pages.dev/"
         style={{ flex: 1, border: "none", width: "100%", display: "block" }}
         allow="autoplay"
         title="ePAL Books"
