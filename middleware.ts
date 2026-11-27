@@ -61,7 +61,7 @@ export async function middleware(req: NextRequest) {
 
   // Always-public routes
   if (
-    pathname.startsWith("/books") ||
+    pathname.startsWith("/epal-books") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/learn") ||   // student API — own auth
     pathname.startsWith("/booking") ||     // public booking tracker
