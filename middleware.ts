@@ -6,7 +6,7 @@ import { sessionOptions, AdminSession, AdminRole } from "@/lib/session";
 const ROLE_PATHS: Record<AdminRole, RegExp> = {
   super_admin:     /.*/,   // all paths
   tenant_admin:    /^\/admin(\/bookings|\/vendors|\/worksheets|\/agents|\/finance|\/settings|\/crm)?(\/.*)?$|^\/admin$/,
-  school_operator: /^\/admin(\/worksheets|\/courses|\/students|\/settings|\/enrollments|\/inbox|\/finance)?(\/.*)?$|^\/admin$|^\/epal$/,
+  school_operator: /^\/admin(\/worksheets|\/courses|\/students|\/settings|\/enrollments|\/inbox|\/finance)?(\/.*)?$|^\/admin$|^\/epal$|^\/erge$/,
   vendor_admin:    /^\/admin(\/products|\/orders|\/settings)?(\/.*)?$|^\/admin$/,
 };
 
@@ -62,6 +62,7 @@ export async function middleware(req: NextRequest) {
   // Always-public routes
   if (
     pathname.startsWith("/epal-books") ||
+    pathname.startsWith("/erge-books") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/learn") ||   // student API — own auth
     pathname.startsWith("/booking") ||     // public booking tracker
