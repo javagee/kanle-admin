@@ -60,7 +60,7 @@ export default function ErGeBooksPage() {
       )}
 
       <iframe
-        src="https://erge-l1.pages.dev/"
+        src="https://erge-l1.erge-reader.workers.dev/"
         style={{ width: "100%", height: "100%", border: "none", display: "block" }}
         allow="autoplay"
         title="ErGe Books"
