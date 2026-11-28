@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     description: "华文互动学习库 · 朗读儿歌 — Interactive Mandarin learning for young children.",
     siteName: "HipyHub Education",
     type: "website",
-    images: [{ url: "https://hipyhub-digital-services.vercel.app/og-erge-books.png", width: 1200, height: 630 }],
+    images: [{ url: "https://hipyhub-digital-services.vercel.app/og-erge-books-v2.png", width: 1200, height: 900 }],
   },
 };
 
