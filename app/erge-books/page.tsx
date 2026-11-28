@@ -1,22 +1,22 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 
 export default function ErGeBooksPage() {
   const [visible, setVisible] = useState(true);
   const [fading, setFading]   = useState(false);
-  const iframeLoaded = useRef(false);
 
   function dismiss() {
     setFading(true);
     setTimeout(() => setVisible(false), 600);
   }
 
-  function onIframeLoad() {
-    if (iframeLoaded.current) return;
-    iframeLoaded.current = true;
-    // 5s minimum — 18MB WASM needs longer init than ePAL
-    setTimeout(dismiss, 5000);
-  }
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.data === "erge-ready") dismiss();
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#111" }}>
@@ -64,7 +64,6 @@ export default function ErGeBooksPage() {
         style={{ width: "100%", height: "100%", border: "none", display: "block" }}
         allow="autoplay"
         title="ErGe Books"
-        onLoad={onIframeLoad}
       />
     </div>
   );
