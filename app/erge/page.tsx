@@ -35,7 +35,7 @@ export default function ErgePage() {
 
       {/* Full-height content frame */}
       <iframe
-        src="https://erge-l1.erge-reader.workers.dev/"
+        src="https://erge-books.pages.dev/"
         style={{ flex: 1, border: "none", width: "100%", display: "block" }}
         allow="autoplay"
         title="ErGe Books"
